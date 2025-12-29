@@ -3,7 +3,6 @@ ps2		:= 0
 debug		:= 0
 flags		:= -g -DDEBUG=0 
 includes	:= -Iinclude -I. -Iinclude/general
-libraries	:= -lSDL2 -L.
 
 ifeq ($(ps2), 1)
 	source		+= src/platform/ps2
@@ -21,10 +20,13 @@ ifeq ($(ps2), 1)
 
 	linkfile	:= -T$(PS2SDK)/ee/startup/linkfile
 else
-	libraries	+= -lc -lGL -lpng -lglfw 
+	libraries	+= -lc \
+			   $(shell pkg-config --cflags --libs sdl2 gl libpng)
+
 	includes    	+= -I/usr/include/freetype2 \
 			   -I/usr/include/ -I/usr/include/GL \
-			   -I/usr/include/libpng16
+			   -I/usr/include/libpng16 \
+			   $(shell pkg-config --cflags sdl2 gl libpng)
 
 	source		+= src/platform/pc
 	prefix		:=

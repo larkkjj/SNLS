@@ -96,10 +96,10 @@ void openRom(char* rom_name, rom* rom_Ptr) {
 	if (rom_File == NULL) {
 		#ifdef _EE
 		//Using a generic function here to overdraw
-		scr_printf("Error, invalid rom \n");
+		scr_printf("open_rom: error, invalid rom, did you set it correctly \n");
 		#endif
-		printf("Error, invalid rom \n");
-		return;
+		printf("open_rom: error, invalid rom, did you set it correctly? \n");
+		exit(1);
 	} else {
 		/* Tell rom size*/
 		printf("Sucess opening the rom \n");

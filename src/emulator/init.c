@@ -9,7 +9,7 @@
 #include "general/tools.h"
 #include "general/functions.h"
 
-#include "SDL2/SDL.h"
+#include "SDL.h"
 
 snCPU* eCPU = NULL;
 snSPC* eSPC = NULL;
