@@ -65,7 +65,7 @@ static void mapPtrBank(emGeneral* emulator, uint index, u8* bank_array[]) {
 	general.apu = eAPU;
 	//bank_array[index + 1] = mMap.apu_addr;
 	general.apu->located = index + 1;
-	setupAPU(emulator, eSPC, &bank_array[general.apu->located], false);
+	setupSPC(emulator, eSPC, &bank_array[general.apu->located], false);
 
 	general.dma = eDMA;
 	//bank_array[index + 2] = mMap.dma_addr;

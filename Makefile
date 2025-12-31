@@ -1,7 +1,7 @@
 binary		:= SNLS.ELF
 ps2		:= 0 
 debug		:= 0
-flags		:= -g -DDEBUG=0 
+flags		:= -g -DDEBUG=0 --std=c11 
 includes	:= -Iinclude -I. -Iinclude/general
 
 ifeq ($(ps2), 1)

@@ -7,7 +7,7 @@
 #include "emulator/gs.h"
 
 #include "emulator/rom.h"
-#include "core/cpu/ricoh.h"
+#include "core/cpu.h"
 #include "emulator/memory.h"
 #include "general/tools.h"
 

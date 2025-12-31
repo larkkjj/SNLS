@@ -1,5 +1,5 @@
 #include <stdbool.h>
-#include "core/cpu/ricoh.h"
+#include "core/cpu.h"
 #include "emulator/memory.h"
 
 extern u8 sn_Mread_u8_const(emGeneral* emulator, u16 offset);

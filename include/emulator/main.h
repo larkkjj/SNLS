@@ -1,7 +1,7 @@
 #ifndef SNLS_MAIN_HEADER
 #define SNLS_MAIN_HEADER
 
-#include "core/cpu/ricoh.h"
+#include "core/cpu.h"
 #include "core/apu.h"
 #include "core/dma.h"
 #include "core/ppu.h"

@@ -2,10 +2,10 @@
 #include "emulator/memory.h"
 #include "general/references.h"
 #include "general/types.h"
-#include "core/cpu/ricoh.h"
+#include "core/cpu.h"
 
 extern void setupDMA(emGeneral* emulator, u8** buffer, bool absolute);
-extern void setupAPU(emGeneral* emulator, snSPC* spc_ptr, u8** buffer, bool absolute);
+extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer, bool absolute);
 extern void setupPPU(emGeneral* emulator, u8** buffer, bool absolute);
 extern void setupCPU(emGeneral* emulator, rom* rom_Ptr);
 

@@ -8,7 +8,7 @@
 #include "general/types.h"
 #include "emulator/memory.h"
 #include "emulator/rom.h"
-#include "core/cpu/ricoh.h"
+#include "core/cpu.h"
 
 extern u8* sn_Mwrite(emGeneral* emulator, u8* address, u16 offset, u32 value) {
 	printf("bus_write: writing %X to [%X][%X]\n", value, emulator->memory->bank_target, emulator->memory->address_target + offset);
@@ -25,15 +25,15 @@ extern u8 sn_Mread_u8_const(emGeneral* emulator, u16 offset) {
 extern u16 sn_Mread_u16_const(emGeneral* emulator, u16 offset) {
 	holdLoAddr = *(++emulator->cpu->sn_PC);
 	holdHiAddr = *(++emulator->cpu->sn_PC);
-	holdAddr = (holdHiAddr << 8 | holdLoAddr); 
-	printf("bus_read: returning 16-bit-const [%X] \n", holdAddr); 
+	holdAddr = (holdHiAddr << 8 | holdLoAddr);
+	printf("bus_read: returning 16-bit-const [%X] \n", holdAddr);
 	return holdAddr;
 };
 
 extern u8* sn_Mread_u16_absolute(emGeneral* emulator, u16 offset) {
 	holdLoAddr = *(++emulator->cpu->sn_PC);
 	holdHiAddr = *(++emulator->cpu->sn_PC);
-	holdAddr = (holdHiAddr << 8 | holdLoAddr); 
+	holdAddr = (holdHiAddr << 8 | holdLoAddr);
 	printf("bus_read: got [0x%02X][%X]\n",  emulator->cpu->sn_DBR, holdAddr);
 	emulator->memory->bank_target = (emulator->cpu->sn_DBR);
 	getMappedBank(emulator->memory->bank_target, holdAddr, emulator);
@@ -48,6 +48,9 @@ extern u8* sn_Mread_u24_absolute(emGeneral* emulator, u8 pagemode) {
 			holdHiAddr = *(++emulator->cpu->sn_PC);
 			holdAddr = (holdHiAddr << 8 | holdLoAddr);
 
+			printf("bus_read: got [0x%02X][%X]\n", *emulator->cpu->sn_PC, holdAddr);
+			printf("bus_read: returning [0x%02X][%X]\n", emulator->memory->bank_target, emulator->memory->address_target);
+
 			getMappedBank(*++emulator->cpu->sn_PC, holdAddr, emulator);
 			return &emulator->memory->bank_array[emulator->memory->bank_target][emulator->memory->address_target];
 			break;
@@ -56,7 +59,4 @@ extern u8* sn_Mread_u24_absolute(emGeneral* emulator, u8 pagemode) {
 
 
 	}
-	printf("bus_read: got [0x%02X][%X]\n", *emulator->cpu->sn_PC, holdAddr);
-	printf("bus_read: returning [0x%02X][%X]\n", emulator->memory->bank_target, emulator->memory->address_target);
 }
-
