@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -32,7 +31,7 @@ int main(int argc, char* argv[]) {
 	 * i make a file explorer */
 	//openRom("roms/cputest/cputest-full.sfc", &rom_Ptr);
 	openRom("roms/mariow.sfc", &rom_Ptr);
-	
+
 	initEmu(&rom_Ptr);
 
 	/* Yea i know this is bad

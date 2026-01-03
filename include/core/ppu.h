@@ -1,5 +1,5 @@
-#ifndef SNLS_PPU_HEADER 
-#define SNLS_PPU_HEADER 
+#ifndef SNLS_PPU_HEADER
+#define SNLS_PPU_HEADER
 
 #include "general/types.h"
 #include "general/references.h"
@@ -93,13 +93,6 @@
 #define STAT77 0x3E
 #define STAT78 0x3F
 
-typedef struct p_Tile {
-	u8	top;
-	u8	bottom;
-	u8	left;
-	u8	right;
-} p_Tile;
-
 typedef struct snPPU {
 	u8	located;
 
@@ -124,16 +117,20 @@ typedef struct snPPU {
 	u8	Bg3VOFS;
 	u8	Bg4HOFS;
 	u8	Bg4VOFS;
-	u8	vMAIN;
-	u8	vMADDL;
-	u8	vMADDH;
-	u8	vMDATAL;
-	u8	vMDATAH;
+	u8	VMain;
+	u8	VmAddL;
+	u8	VmAddH;
+	u8	VmDataL;
+	u8	VmDataH;
 
 	u8	cgAdd;
 	u8	cgData;
 
 	void		(*fetch)(emGeneral* emulator);
 } snPPU;
+
+typedef struct p_Tile {
+    u16     tileSprite;
+} p_Tile;
 
 #endif

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
-#include <stdlib.h>
-#include <math.h>
+#include <malloc.h>
 
 #include "general/types.h"
 
@@ -50,7 +49,7 @@ extern u8 getMappedBank(u8 index, u16 address, emGeneral* emulator) {
 			emulator->memory->address_target = address - 0x2140;
 			emulator->memory->bank_target = emulator->apu->located;
 		} else if (address == 0x420B || address == 0x420C) {
-			emulator->memory->address_target = address - 0x420B;	
+			emulator->memory->address_target = address - 0x420B;
 			emulator->memory->bank_target = emulator->dma->located;
 		}
 		printf("%X \n", emulator->memory->address_target);
@@ -65,7 +64,7 @@ extern u8 getMappedBank(u8 index, u16 address, emGeneral* emulator) {
 };
 
 extern void assignToMap(u8** dest, u8** src, unsigned int offset, unsigned int count, unsigned int type) {
-	/* don't misunderstand with a memcpy alternative 
+	/* don't misunderstand with a memcpy alternative
 	 * this references a map to another one */
 	/* double is used here 'cause of rom buffer that uses
 	 * a single pointer */
@@ -82,15 +81,13 @@ extern void setupSystem(u8* buffer, snPPU* ppu, snDMA* dma) {
 	/*for(unsigned int i = 0; i < 0xFF; i ++) {
 		mBank[i] = malloc(sizeof(u8));
 	};
-	
+
 	for(unsigned int i = 0; i < rom_Ptr->banks; i ++) {
 		mMemory_ptr[i] = malloc(sizeof(u8));
 		mMemory_ptr[i]->buffer = malloc(0x10000);
 		//attachROM(mMemory_ptr[i]->buffer, rom_Ptr);
 		mapPPU(ePPU, mMemory_ptr[i]->buffer);
-		
+
 		mBank[i] = *mMemory_ptr[i]->buffer;
 	}*/
 };
-
-

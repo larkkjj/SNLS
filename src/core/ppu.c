@@ -12,14 +12,19 @@ static void fetchPPU(emGeneral* emulator) {
 	 * of a register to check if setupping is working */
 	printf("ppu_fetch: ppu-> %X %X %X %X\n", emulator->ppu->IniDisp, emulator->ppu->BgMode, emulator->ppu->cgAdd, emulator->ppu->cgData);
 	*emulator->active ^= 0x02;
-	emulator->endfetch(emulator);
+
+	p_Tile sprite;
+
+	sprite.tileSprite = emulator->ppu->VmAddL << 8 | emulator->ppu->VmAddH;
+	printf("ppu -> %x\n", sprite.tileSprite);
+
 	return;
 }
 
 extern void setupPPU(emGeneral* emulator, u8** buffer, bool absolute) {
 	/* don't use absolute if you don't know what you're doing. */
 	/* it was here 'cause of a direct setupping method using Map
-	 * instead of PPU_setup, it's here for future reasons... 
+	 * instead of PPU_setup, it's here for future reasons...
 	 * also if you use, keep in mind that you will need a bigger
 	 * malloc */
 	emulator->ppu->fetch = fetchPPU;
@@ -43,9 +48,13 @@ extern void setupPPU(emGeneral* emulator, u8** buffer, bool absolute) {
 		buffer[0x09] = &emulator->ppu->Bg3SC;
 		buffer[0x0A] = &emulator->ppu->Bg4SC;
 
+		buffer[0x16] = &emulator->ppu->VmAddL;
+		buffer[0x17] = &emulator->ppu->VmAddH;
+
 		buffer[0x21] = &emulator->ppu->cgAdd;
 		buffer[0x22] = &emulator->ppu->cgData;
 	}
+
+	sleep(1);
 	return;
 }
-

@@ -8,27 +8,27 @@
 /*ですただ */
 typedef struct snCPU {
 	u8		currentPtrBank;
-	u8*		sn_PC;
-	u8*		sn_subPC;	/* Subroutine */
+	u8*		PC;
+	u8*		subPC;	/* Subroutine */
 
-	u16		sn_S;
-	u16		sn_Acc;
-	u16		sn_X;
-	u16		sn_Y;
-	u16		sn_DP;
-	u8		sn_DBR;
-	u8		sn_PB;
-	u16		sn_P;
+	u16		SP;
+	u16		A;
+	u16		X;
+	u16		Y;
+	u16		DP;
+	u8		DBR;
+	u8		PB;
+	u16		P;
 
-	u8		sn_Flags;
+	u8		flags;
 	void		(*fetch)(emGeneral* emulator);
-	
+
 	/* in the future, i want
 	 * to implement an idea
 	 * that i had in the project
-	 * s starting phase, 
+	 * s starting phase,
 	 * a single u8 value
-	 * acting all the sn_Flags 
+	 * acting all the sn_Flags
 	 * like the OG hardware */
 	bool 		sn_NFlag;
 	bool 		sn_VFlag;
@@ -41,7 +41,7 @@ typedef struct snCPU {
 	bool 		sn_EFlag;
 	bool 		sn_BFlag;
 
-	u8		steps;
+	u8		cycles;
 
 } snCPU;
 
@@ -61,7 +61,7 @@ typedef enum {
 	_adc_addr_y 	= 0x79,
 	_adc_addr_x 	= 0x7D,
 	_adc_long_x 	= 0x7F,
-			
+
 	// AND INS
 	_and_dp_x_indr	= 0x21,
 	_and_sr_s 	= 0x23,
@@ -93,11 +93,11 @@ typedef enum {
 	_blt		= _bcc, //alias to BCC
 	_bss		= 0xB0,
 	_bge		= _bcs, //alias to BCS
-	
+
 	// BEQ INS
 	_beq		= 0xF0,
-	
-	// BIT INS	
+
+	// BIT INS
 	_bit_dp		= 0x24,
 	_bit_addr	= 0x2C,
 	_bit_dp_x	= 0x34,
@@ -127,7 +127,7 @@ typedef enum {
 	_cmp_dp_indr_l	= 0xC7,
 	_cmp_const	= 0xC9,
 	_cmp_addr 	= 0xCD,
-	_cmp_l	 	= 0xCF,	
+	_cmp_l	 	= 0xCF,
 	_cmp_dp_indr_y	= 0xD1,
 	_cmp_dp_indr 	= 0xD2,
 	_cmp_sr_s_y	= 0xD3,
@@ -144,16 +144,16 @@ typedef enum {
 	_cpy_const	= 0xC0,
 	_cpy_dp		= 0xC4,
 	_cpy_addr	= 0xCC,
-	
+
 	// COP INS
-	_cop		= 0x02, 
+	_cop		= 0x02,
 
 	_dea		= 0x3A,
 	_dec_dp		= 0xC6,
 	_dec_addr	= 0xCE,
 	_dec_dp_x	= 0xD6,
 	_dec_addr_x	= 0xDE,
-	
+
 	_dex		= 0xCA, //basically a dec(x) equivalent
 	_dey		= 0x88, //basically a dec(y) equivalent
 
@@ -178,18 +178,18 @@ typedef enum {
 	_inc_addr_x	= 0xFE, //basically a add equivalent
 	_inx		= 0xE8, // Increment X by 1
 	_iny		= 0xC8, // Increment Y by 1
-	
+
 	// JMP INS
 	_jmp_addr	= 0x4C,
 	_jmp_l		= 0x5C,
 	_jmp_addr_indr	= 0x6C,
 	_jmp_addr_x_indr= 0x7C,
 	_jmp_addr_indr_l= 0xDC,
-	
+
 	_jsr_addr	= 0x20,
 	_jsr_l		= 0x22,
 	_jsr_addr_x_indr= 0xFC,
-	
+
 	_lda_addr	= 0xAD,
 	_lda_const	= 0xA9,
 	_lda_addr_x	= 0xB9,

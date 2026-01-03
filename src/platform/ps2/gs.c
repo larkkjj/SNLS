@@ -6,8 +6,10 @@
 #include "emulator/gs.h"
 #include "general/types.h"
 
-extern void gsInit() {
-    return;
-
+extern void initWindow() {
+	return;
+}
+extern void pollWindow() {
+	return;
 };
 

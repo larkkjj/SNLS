@@ -4,10 +4,10 @@
 #include "general/references.h"
 #include "general/types.h"
 
-static u8 IPL_NTSC[64] = {
+static u8 IPL_NTSC[0x40] = {
 	0xCD, 0xEF, /* load 0xEF */
 	0xBD,	    /* copy X to SP */
-	
+
 	0xE8, 0x00,
 	0xC6,
 	0x1D,
@@ -53,25 +53,25 @@ static u8 IPL_NTSC[64] = {
 
 
 typedef struct snSPC {
-	u8*	PC;
-	u8	A;
-	u8	X;
-	u8	Y;
+	u8*	    PC;
+	u8	    A;
+	u8	    X;
+	u8	    Y;
 	u16*	YA; /* A << 8 | Y*/
-	u8	SP; /* Stack Pointer */
-	u8	Flags; /* Same as CPU flags or PSW if you prefer */
+	u8	    SP; /* Stack Pointer */
+	u8	    Flags; /* Same as CPU flags or PSW if you prefer */
 
-	void		(*fetch)(emGeneral* emulator);
+	void	(*fetch)(emGeneral* emulator);
 } snSPC;
 
 typedef struct snDSL {
 	/* this is really responsible for SNES AUDIO */
-	u8*	buffer[];
+	u8*	    buffer[];
 } snDSL;
 
 typedef struct snAPU {
-	u8	located;
-	u8	internalRAM[0xFFFF];
+	u8	    located;
+	u8	    internalRAM[0xFFFF];
 	snSPC*	spc;
 } snAPU;
 

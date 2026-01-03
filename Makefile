@@ -1,8 +1,9 @@
-binary		:= SNLS.ELF
-ps2		:= 0 
-debug		:= 0
-flags		:= -g -DDEBUG=0 --std=c11 
+binary		:= bin/SNLS.ELF
+ps2		?= 0
+debug		?= 0
+flags		:= -g -DDEBUG=0 --std=c23
 includes	:= -Iinclude -I. -Iinclude/general
+
 
 ifeq ($(ps2), 1)
 	source		+= src/platform/ps2
@@ -16,17 +17,13 @@ ifeq ($(ps2), 1)
 	includes	+= -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include \
 			   -I$(GSKIT)/include -I$(PS2SDK)/ports/include/GL \
 			   -I$(PS2SDK)/ports/include -I$(PS2SDK)/ports/include/freetype2 \
-			   -I$(PS2SDK)/ports/include/libpng16/
+			   -I$(PS2SDK)/ports/include/libpng16/ -I$(PS2SDK)/ports/include/SDL2
 
 	linkfile	:= -T$(PS2SDK)/ee/startup/linkfile
 else
-	libraries	+= -lc \
-			   $(shell pkg-config --cflags --libs sdl2 gl libpng)
+	libraries	+= $(shell pkg-config --cflags --libs freetype2 sdl2 libpng)
 
-	includes    	+= -I/usr/include/freetype2 \
-			   -I/usr/include/ -I/usr/include/GL \
-			   -I/usr/include/libpng16 \
-			   $(shell pkg-config --cflags sdl2 gl libpng)
+	includes    	+= $(shell pkg-config --cflags freetype2 sdl2 libpng)
 
 	source		+= src/platform/pc
 	prefix		:=
@@ -49,10 +46,10 @@ source		+= src \
 
 c_source 	+= $(foreach c_src, $(source), $(wildcard $(c_src)/*.c))
 #c_source	+= $(foreach c_src, $(source), $(wildcard $(c_src)/*.cpp))
-c_objects	+= $(patsubst %.c,build/%.o,$(c_source))
-d_files		+= $(patsubst %.c,build/%.d,$(c_source))
-#c_objects	+= $(patsubst %.cpp,build/%.o,$(c_source))
-#c_objects	+= $(patsubst %.cpp,build/%.o,$(cpp_source))
+c_objects	+= $(patsubst %.c,bin/%.o,$(c_source))
+d_files		+= $(patsubst %.c,bin/%.d,$(c_source))
+#c_objects	+= $(patsubst %.cpp,bin/%.o,$(c_source))
+#c_objects	+= $(patsubst %.cpp,bin/%.o,$(cpp_source))
 
 # not used
 # objects		:= $(c_objects)
@@ -64,17 +61,16 @@ $(binary): $(c_objects)
 	@echo -e '\n\t Linking to $@...\n'
 	$(compiler) $(linkfile) -o $@ $^ $(includes) $(libraries)
 
-build/%.o: %.c 
+bin/%.o: %.c
 	@mkdir -p $(@D)
 	@echo -e '\n\t Building $@\n'
 	$(compiler) -c $^ -o $@ $(includes) $(flags) $(libraries)
 
 
-#build/%.o: %.cpp
+#bin/%.o: %.cpp
 #	@mkdir -p $(@D)
 #	@echo Building $@
 #	$(compiler_g++) -c $^ -o $@ $(includes) $(flags) $(libraries)
 
 clean:
-	rm -rf build
-
+	rm -rf bin

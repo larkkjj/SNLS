@@ -17,5 +17,5 @@ extern void attachROM(u8* buffer);
 extern void assignToMap(u8** dest, u8** src, unsigned int offset, unsigned int count, unsigned int type);
 
 extern u8 getMappedBank(u8 index, u16 address, emGeneral* emulator);
+extern void syncFetch(emGeneral* emulator);
 extern void initEmu(rom* rom_Ptr);
-

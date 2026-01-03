@@ -1,5 +1,5 @@
-#ifndef SNLS_TYPE_HEADER	
-#define SNLS_TYPE_HEADER 
+#ifndef SNLS_TYPE_HEADER
+#define SNLS_TYPE_HEADER
 
 #include <stdint.h>
 

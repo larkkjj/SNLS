@@ -17,7 +17,7 @@ extern void initWindow() {
 	return;
 }
 extern void pollWindow() {
-	SDL_SetRenderDrawColor(renderer, 0x21, 0x21, 0x21, 0xFF);
+	SDL_SetRenderDrawColor(renderer, 0x10, 0x10, 0x10, 0xFF);
 	SDL_RenderClear(renderer);
 
 	SDL_RenderPresent(renderer);

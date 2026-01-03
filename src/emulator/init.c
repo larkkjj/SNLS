@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h>
+#include <malloc.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -21,34 +21,26 @@ snRAM* eRAM = NULL;
 emGeneral general;
 emMemory memory;
 
-static void endfetch(emGeneral* emulator) {
-	printf("emulator: 0x%02X\n", *emulator->active);
-
-	return;
-};
-
 static void mainFetch(emGeneral* emulator) {
 	pollWindow();
+	syncFetch(emulator);
 	emulator->cpu->fetch(emulator);
-	emulator->apu->spc->fetch(emulator);
-
+	if (emulator->cpu->cycles & 0x7) {
+	    emulator->cpu->cycles -= 6;
+	    emulator->apu->spc->fetch(emulator);
+	}
 	emulator->ppu->fetch(emulator);
-
-	while (1) {
-		
-		printf("emulator: 0x%02X\n", *emulator->active);
-		break;
-	}	
+	printf("active: %X \n", *emulator->active);
 }
 
-static void mapPtrBank(emGeneral* emulator, uint index, u8* bank_array[]) {
+extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]) {
 	/* this is loROM only */
 	/* target, make 17 pointers, assuming the rom
-	 * have 16 banks, so that would be 
+	 * have 16 banks, so that would be
 	 * 32KB * 16 + 32KB => 544KB*/
 	emROM rom[index];
 	/* this is where our fun beggins */
-	for(uint i = 0; i < index; i ++) {
+	for(unsigned int i = 0; i < index; i ++) {
 		bank_array[i] = malloc(0x8000);
 		rom[i].buffer = malloc(0x8000);
 		fread(rom[i].buffer, sizeof(u8), 0x8000, rom_File);
@@ -72,10 +64,10 @@ static void mapPtrBank(emGeneral* emulator, uint index, u8* bank_array[]) {
 	general.dma->located = index + 2;
 	setupDMA(emulator, &bank_array[general.dma->located], false);
 
-	bank_array[index + 3] = eRAM->wRAM_lo; /* if our rom have 16 banks, our RAM 
+	bank_array[index + 3] = eRAM->wRAM_lo; /* if our rom have 16 banks, our RAM
 	will be located at 16 + 3 = 19 and above */
 	bank_array[index + 4] = eRAM->wRAM_hi;
-	
+
 }
 
 extern void initEmu(rom* rom_Ptr) {
@@ -85,7 +77,7 @@ extern void initEmu(rom* rom_Ptr) {
 		eRAM->wRAM_exp2[i] = calloc(1, sizeof(u8*));
 	}
 */
-	
+
 	ePPU = malloc(sizeof(snPPU));
 	eDMA = malloc(sizeof(snDMA));
 	eAPU = malloc(sizeof(snAPU));
@@ -107,7 +99,6 @@ extern void initEmu(rom* rom_Ptr) {
 	general.active = malloc(1);
 	*general.active = 0;
 	general.mainFetch = mainFetch;
-	general.endfetch = endfetch;
 	setupCPU(&general, rom_Ptr);
 
 	/* call our main fetch */

@@ -50,5 +50,3 @@ extern void setupDMA(emGeneral* emulator, u8** buffer, bool absolute) {
 	emulator->dma->HdMaen = 0;
 	return;
 };
-
-
