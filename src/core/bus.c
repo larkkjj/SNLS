@@ -17,14 +17,14 @@ extern u8* sn_Mwrite(emGeneral* emulator, u8* address, u16 offset, u32 value) {
 
 
 extern u8 sn_Mread_u8_const(emGeneral* emulator, u16 offset) {
-	holdAddr = (u8) *++emulator->cpu->PC;
+	holdAddr = (u8) *++emulator->cpu->PC + offset;
 	return holdAddr;
 };
 
 extern u16 sn_Mread_u16_const(emGeneral* emulator, u16 offset) {
 	holdLoAddr = *(++emulator->cpu->PC);
 	holdHiAddr = *(++emulator->cpu->PC);
-	holdAddr = (holdHiAddr << 8 | holdLoAddr);
+	holdAddr = (holdHiAddr << 8 | holdLoAddr) + offset;
 	printf("bus_read: returning 16-bit-const [%X] \n", holdAddr);
 	return holdAddr;
 };
@@ -32,8 +32,8 @@ extern u16 sn_Mread_u16_const(emGeneral* emulator, u16 offset) {
 extern u8* sn_Mread_u16_absolute(emGeneral* emulator, u16 offset) {
 	holdLoAddr = *(++emulator->cpu->PC);
 	holdHiAddr = *(++emulator->cpu->PC);
-	holdAddr = (holdHiAddr << 8 | holdLoAddr);
-	printf("bus_read: got [0x%02X][%X]\n",  emulator->cpu->DBR, holdAddr + offset);
+	holdAddr = (holdHiAddr << 8 | holdLoAddr) + offset;
+	printf("bus_read: got [0x%02X][%X]\n",  emulator->cpu->DBR, holdAddr);
 	emulator->memory->bank_target = (emulator->cpu->DBR);
 	getMappedBank(emulator->memory->bank_target, holdAddr, emulator);
 	printf("bus_read: returning [0x%02X][%X]\n", emulator->memory->bank_target, emulator->memory->address_target);

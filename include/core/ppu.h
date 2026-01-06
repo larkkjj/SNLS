@@ -110,7 +110,9 @@ typedef struct snPPU {
 	u8	Bg12NBA;
 	u8	Bg34NBA;
 	u8	Bg1HOFS;
+	u8 	M7HOFS;
 	u8	Bg1VOFS;
+	u8  	M7VOFS;
 	u8	Bg2HOFS;
 	u8	Bg2VOFS;
 	u8	Bg3HOFS;

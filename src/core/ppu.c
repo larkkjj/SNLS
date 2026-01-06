@@ -47,14 +47,22 @@ extern void setupPPU(emGeneral* emulator, u8** buffer, bool absolute) {
 		buffer[0x08] = &emulator->ppu->Bg2SC;
 		buffer[0x09] = &emulator->ppu->Bg3SC;
 		buffer[0x0A] = &emulator->ppu->Bg4SC;
-
+		buffer[0x0B] = &emulator->ppu->Bg12NBA;
+		buffer[0x0C] = &emulator->ppu->Bg34NBA;
+		buffer[0x0D] = &emulator->ppu->Bg1HOFS;
+		//buffer[0x0D] = &emulator->ppu->M7HOFS;
+		buffer[0x0E] = &emulator->ppu->Bg1VOFS;
+		//buffer[0x0E] = &emulator->ppu->M7VOFS;
+		buffer[0x0F] = &emulator->ppu->Bg2HOFS;
+		buffer[0x10] = &emulator->ppu->Bg2VOFS;
+		buffer[0x11] = &emulator->ppu->Bg3HOFS;
+		buffer[0x11] = &emulator->ppu->Bg3VOFS;
+		
 		buffer[0x16] = &emulator->ppu->VmAddL;
 		buffer[0x17] = &emulator->ppu->VmAddH;
 
 		buffer[0x21] = &emulator->ppu->cgAdd;
 		buffer[0x22] = &emulator->ppu->cgData;
 	}
-
-	sleep(1);
 	return;
 }

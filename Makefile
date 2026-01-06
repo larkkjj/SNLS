@@ -1,9 +1,8 @@
-binary		:= bin/SNLS.ELF
+binary		:= SNLS.ELF
 ps2		?= 0
 debug		?= 0
 flags		:= -g -DDEBUG=0 --std=c23
 includes	:= -Iinclude -I. -Iinclude/general
-
 
 ifeq ($(ps2), 1)
 	source		+= src/platform/ps2
@@ -73,4 +72,4 @@ bin/%.o: %.c
 #	$(compiler_g++) -c $^ -o $@ $(includes) $(flags) $(libraries)
 
 clean:
-	rm -rf bin
+	rm -rf bin $(binary)
