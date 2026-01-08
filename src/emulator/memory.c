@@ -34,7 +34,7 @@ extern void attachROM(u8* buffer) {
 	return;
 };
 
-extern u8 getMappedBank(u8 index, u16 address, emGeneral* emulator) {
+extern void getMappedBank(u8 index, u16 address, emGeneral* emulator) {
 	if (index >= 0x00 && index <= 0x3F) {
 		if (address >= 0x8000) {
 			/* goes to rom*/
@@ -48,12 +48,14 @@ extern u8 getMappedBank(u8 index, u16 address, emGeneral* emulator) {
 			/* falls back to apu! */
 			emulator->memory->address_target = address - 0x2140;
 			emulator->memory->bank_target = emulator->apu->located;
+		} else if (address == 0x4200 || address == 0x4201) {
+			printf("we're supposed to got joypad registers, but not implemented yet\n");
+			emulator->memory->address_target = address - 0x4200;
+			emulator->memory->bank_target = emulator->memory->bank_count + 3;
 		} else if (address == 0x420B || address == 0x420C) {
 			emulator->memory->address_target = address - 0x420B;
 			emulator->memory->bank_target = emulator->dma->located;
 		}
-		printf("%X \n", emulator->memory->address_target);
-			sleep(1);
 	} else if (index >= 0x7E) {
 		emulator->memory->address_target = address;
 		emulator->memory->bank_target = emulator->memory->bank_count + 3;
@@ -61,6 +63,7 @@ extern u8 getMappedBank(u8 index, u16 address, emGeneral* emulator) {
 		emulator->memory->address_target = address;
 		emulator->memory->bank_target = emulator->memory->bank_count + 4;
 	}
+	return;
 };
 
 extern void assignToMap(u8** dest, u8** src, unsigned int offset, unsigned int count, unsigned int type) {

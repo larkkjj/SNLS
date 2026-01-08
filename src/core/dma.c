@@ -36,17 +36,14 @@ static void fetchDMA(emGeneral* emulator) {
 		printf("channel 7 enabled \n");;
 };
 
-extern void setupDMA(emGeneral* emulator, u8** buffer, bool absolute) {
+extern void setupDMA(emGeneral* emulator, u8** buffer) {
 	emulator->dma->fetch = fetchDMA;
 
-	if (absolute) {
-		buffer[MDMAEN] = &emulator->dma->MdMaen;
-		buffer[HDMAEN] = &emulator->dma->HdMaen;
-	} else {
-		buffer[0x0B] = &emulator->dma->MdMaen;
-		buffer[0x0C] = &emulator->dma->HdMaen;
-	}
+	buffer[0x0B] = &emulator->dma->MdMaen;
+	buffer[0x0C] = &emulator->dma->HdMaen;
+
 	emulator->dma->MdMaen = 0;
 	emulator->dma->HdMaen = 0;
 	return;
 };
+

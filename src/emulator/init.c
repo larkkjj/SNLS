@@ -21,15 +21,52 @@ snRAM* eRAM = NULL;
 emGeneral general;
 emMemory memory;
 
+static u8 syncCounter[0xFF];
+
 static void mainFetch(emGeneral* emulator) {
-	pollWindow();
-	syncFetch(emulator);
-	emulator->cpu->fetch(emulator);
-	if (emulator->cpu->cycles & 0x7) {
-	    emulator->cpu->cycles -= 6;
-	    emulator->apu->spc->fetch(emulator);
+	u8 counter;
+
+	for(unsigned int i = 0; i < 0xFF; i ++) {
+		u8 a = 0x00; //cpu
+		u8 b = 0x01; //ppu
+		u8 c = 0x02; //apu
+		u8 d = 0x04; //dma
+
+		syncCounter[i] = a;
+
 	}
-	emulator->ppu->fetch(emulator);
+	/* our main infinite loop' which is basically
+	 * a sync cycle fetch */
+	while (1) {
+
+		pollWindow();
+		counter++;
+		switch (syncCounter[counter]) {
+			case (0x00):
+				printf("sync_counter: fetching cpu...\n");
+				emulator->cpu->fetch(emulator);
+			break;
+
+			case (0x01):
+				printf("sync_counter: fetching ppu...\n");
+				emulator->ppu->fetch(emulator);
+			break;
+
+			case (0x02):
+				printf("sync_counter: fetching spc...\n");
+				emulator->apu->spc->fetch(emulator);
+			break;
+
+			case (0x04):
+				printf("sync_counter: we're supposed to go to dma process \n");
+			break;
+
+			default:
+				printf("error, not valid number found in cycle order, exiting...\n");
+				exit(1);
+			break;
+		}
+	};
 	printf("active: %X \n", *emulator->active);
 }
 
@@ -49,20 +86,18 @@ extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]
 	}
 
 	general.memory->bank_count = index;
+
 	general.ppu = ePPU;
-	//bank_array[index] = mMap.ppu_addr;
 	general.ppu->located = index;
-	setupPPU(emulator, &bank_array[general.ppu->located], false);
+	setupPPU(emulator, &bank_array[general.ppu->located]);
 
 	general.apu = eAPU;
-	//bank_array[index + 1] = mMap.apu_addr;
 	general.apu->located = index + 1;
-	setupSPC(emulator, eSPC, &bank_array[general.apu->located], false);
+	setupSPC(emulator, eSPC, &bank_array[general.apu->located]);
 
 	general.dma = eDMA;
-	//bank_array[index + 2] = mMap.dma_addr;
 	general.dma->located = index + 2;
-	setupDMA(emulator, &bank_array[general.dma->located], false);
+	setupDMA(emulator, &bank_array[general.dma->located]);
 
 	bank_array[index + 3] = eRAM->wRAM_lo; /* if our rom have 16 banks, our RAM
 	will be located at 16 + 3 = 19 and above */
@@ -85,10 +120,10 @@ extern void initEmu(rom* rom_Ptr) {
 	eSPC = malloc(sizeof(snSPC));
 	eRAM = malloc(sizeof(snRAM));
 
-	eRAM->wRAM_lo = malloc(0x10000);
-	eRAM->wRAM_hi = malloc(0x10000);
 	general.memory = &memory;
 
+	eRAM->wRAM_lo = malloc(0x10000);
+	eRAM->wRAM_hi = malloc(0x10000);
 	mapPtrBank(&general, rom_Ptr->banks, memory.bank_array);
 	fclose(rom_File);
 
@@ -102,9 +137,8 @@ extern void initEmu(rom* rom_Ptr) {
 	setupCPU(&general, rom_Ptr);
 
 	/* call our main fetch */
-	while (1) {
-		mainFetch(&general);
-	}
+	mainFetch(&general);
+
 	free(eCPU);
 	free(ePPU);
 	free(eDMA);

@@ -103,7 +103,7 @@ static void fetchSPC(emGeneral* emulator) {
 	return;
 }
 
-extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer, bool absolute) {
+extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer) {
 	/* APU != SPC
 	 * SPC-700 is a completely separated Processor
 	 * APU is the communicate interface

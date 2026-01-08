@@ -66,7 +66,6 @@ typedef struct snSPC {
 
 typedef struct snDSL {
 	/* this is really responsible for SNES AUDIO */
-	u8*	    buffer[];
 } snDSL;
 
 typedef struct snAPU {
