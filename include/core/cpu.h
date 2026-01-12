@@ -7,7 +7,6 @@
 
 /*ですただ */
 typedef struct snCPU {
-	u8		currentPtrBank;
 	u8*		PC;
 	u8*		subPC;	/* Subroutine */
 

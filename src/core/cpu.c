@@ -446,7 +446,6 @@ static void sn_OpXCE(emGeneral* emulator) {
 }
 
 extern void fetchCPU(emGeneral* emulator) {
-	*emulator->active |= 0x01;
 	printf("cpu_fetch: a: %X x: %X y: %X eF: %X mF: %X \n", emulator->cpu->A, emulator->cpu->X, emulator->cpu->Y, emulator->cpu->sn_EFlag, emulator->cpu->sn_MFlag);
 	printf("cpu_opcode: %X \n", *emulator->cpu->PC);
 	printf("cpu_cycles: %d\n", emulator->cpu->cycles);
@@ -593,7 +592,6 @@ extern void fetchCPU(emGeneral* emulator) {
 			++emulator->cpu->PC;
 			break;
 	};
-	*emulator->active ^= 0x01;
 }
 
 extern void setupCPU(emGeneral *emulator, rom* rom_Ptr) {
@@ -610,6 +608,7 @@ extern void setupCPU(emGeneral *emulator, rom* rom_Ptr) {
 	emulator->cpu->P = 0;
 	emulator->cpu->PB = 0;
 	emulator->cpu->DBR = 0;
+	emulator->cpu->cycles = 0;
 	emulator->cpu->fetch = fetchCPU;
 
 	printf("cpu_setup: done\n");

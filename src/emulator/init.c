@@ -21,53 +21,43 @@ snRAM* eRAM = NULL;
 emGeneral general;
 emMemory memory;
 
-static u8 syncCounter[0xFF];
+static u8 syncCycle[0xFF];
+static u8 syncCounter = 0x00;
 
 static void mainFetch(emGeneral* emulator) {
-	u8 counter;
 
-	for(unsigned int i = 0; i < 0xFF; i ++) {
-		u8 a = 0x00; //cpu
-		u8 b = 0x01; //ppu
-		u8 c = 0x02; //apu
-		u8 d = 0x04; //dma
+		u8 a = 0x01; //cpu 0000 0001
+		u8 b = 0x02; //ppu 0000 0010
+		u8 c = 0x04; //spc 0000 0100
+		u8 d = 0x08; //dma 0000 1000
 
-		syncCounter[i] = a;
-
+	for(u8 i = 0; i < 0xFF; i ++) {
+		syncCycle[i] |= a;
+		if (syncCycle[i] % 3 == 0) {
+			syncCycle[i] |= c;
+		} else {
+			continue;
+		}
 	}
+	
 	/* our main infinite loop' which is basically
 	 * a sync cycle fetch */
 	while (1) {
 
 		pollWindow();
-		counter++;
-		switch (syncCounter[counter]) {
-			case (0x00):
+		if (syncCycle[syncCounter] & 0x01) {
 				printf("sync_counter: fetching cpu...\n");
 				emulator->cpu->fetch(emulator);
-			break;
-
-			case (0x01):
+		} else if (syncCycle[syncCounter] & 0x02) {
 				printf("sync_counter: fetching ppu...\n");
 				emulator->ppu->fetch(emulator);
-			break;
-
-			case (0x02):
+		} else if (syncCycle[syncCounter] & 0x04) {
 				printf("sync_counter: fetching spc...\n");
 				emulator->apu->spc->fetch(emulator);
-			break;
-
-			case (0x04):
-				printf("sync_counter: we're supposed to go to dma process \n");
-			break;
-
-			default:
-				printf("error, not valid number found in cycle order, exiting...\n");
-				exit(1);
-			break;
+		} else if (syncCycle[syncCounter] & 0x08) {
+				printf("sync_counter: fetching DMA ...(at least we're supposed to\n");	
 		}
-	};
-	printf("active: %X \n", *emulator->active);
+	}
 }
 
 extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]) {
