@@ -8,6 +8,7 @@ extern void setupDMA(emGeneral* emulator, u8** buffer);
 extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer);
 extern void setupPPU(emGeneral* emulator, u8** buffer);
 extern void setupCPU(emGeneral* emulator, rom* rom_Ptr);
+extern void setupBUS(emGeneral* emulator, snBUS* bus);
 
 extern void initWindow();
 extern void pollWindow();

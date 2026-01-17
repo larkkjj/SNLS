@@ -9,5 +9,5 @@ typedef struct snAPU snAPU;
 typedef struct snCPU snCPU;
 typedef struct snPPU snPPU;
 typedef struct snSPC snSPC;
-
+typedef struct snBUS snBUS;
 #endif

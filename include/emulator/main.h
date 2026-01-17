@@ -9,14 +9,14 @@
 /* definition of the above*/
 typedef struct emGeneral {
 	snCPU*		cpu;
+	snRAM*		ram;
 	snPPU*		ppu;
 	snAPU*		apu;
 	snDMA*		dma;
+	snBUS*		bus;
 	emMemory*	memory;
 	u8*		active;
 
-	void		(*mainFetch)(emGeneral* emulator);
-	void		(*endfetch)(emGeneral* emulator);
 } emGeneral;
 
 #endif

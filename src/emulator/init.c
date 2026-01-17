@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "core/apu.h"
+#include "core/bus.h"
+#include "core/cpu.h"
+#include "core/dma.h"
+#include "core/ppu.h"
+
 #include "emulator/main.h"
 #include "emulator/memory.h"
 #include "emulator/gs.h"
@@ -17,46 +23,49 @@ snPPU* ePPU = NULL;
 snDMA* eDMA = NULL;
 snAPU* eAPU = NULL;
 snRAM* eRAM = NULL;
+snBUS* eBUS = NULL;
 
 emGeneral general;
 emMemory memory;
 
-static u8 syncCycle[0xFF];
-static u8 syncCounter = 0x00;
+typedef struct snesSync {
+	u8	order[0xFF];
+	u8	counter;
+} snesSync;
 
-static void mainFetch(emGeneral* emulator) {
+u8 cpuOperation = 0x01;
+u8 ppuOperation = 0x02;
+u8 spcOperation = 0x04;
+u8 dmaOperation = 0x08;
 
-		u8 a = 0x01; //cpu 0000 0001
-		u8 b = 0x02; //ppu 0000 0010
-		u8 c = 0x04; //spc 0000 0100
-		u8 d = 0x08; //dma 0000 1000
-
-	for(u8 i = 0; i < 0xFF; i ++) {
-		syncCycle[i] |= a;
-		if (syncCycle[i] % 3 == 0) {
-			syncCycle[i] |= c;
-		} else {
-			continue;
-		}
+void mainFetch(emGeneral* emulator) {
+	snesSync sync;
+	for(int i = 0x00; i < 0xFF; i++) {
+		sync.order[i] = cpuOperation;
+		/* only cpu for testing */
 	}
-	
 	/* our main infinite loop' which is basically
 	 * a sync cycle fetch */
 	while (1) {
-
 		pollWindow();
-		if (syncCycle[syncCounter] & 0x01) {
-				printf("sync_counter: fetching cpu...\n");
-				emulator->cpu->fetch(emulator);
-		} else if (syncCycle[syncCounter] & 0x02) {
-				printf("sync_counter: fetching ppu...\n");
-				emulator->ppu->fetch(emulator);
-		} else if (syncCycle[syncCounter] & 0x04) {
-				printf("sync_counter: fetching spc...\n");
-				emulator->apu->spc->fetch(emulator);
-		} else if (syncCycle[syncCounter] & 0x08) {
-				printf("sync_counter: fetching DMA ...(at least we're supposed to\n");	
+		if (sync.order[sync.counter] & 0x01) {
+			printf("sync_counter: fetching cpu...\n");
+			emulator->cpu->fetch(emulator);
 		}
+		if (sync.order[sync.counter] & 0x02) {
+			printf("sync_counter: fetching ppu...\n");
+			emulator->ppu->fetch(emulator);
+		}
+		if (sync.order[sync.counter] & 0x04) {
+			printf("sync_counter: fetching spc...\n");
+			emulator->apu->spc->fetch(emulator);
+		}
+		if (sync.order[sync.counter] & 0x08) {
+			printf("sync_counter: fetching DMA ...(at least we're supposed to\n");	
+		}
+		printf("%X %X \n", sync.counter, sync.order[sync.counter]);
+
+		sync.counter++;
 	}
 }
 
@@ -76,6 +85,9 @@ extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]
 	}
 
 	general.memory->bank_count = index;
+	general.memory->pointerTarget = malloc(sizeof(u8*));
+	
+	setupBUS(emulator, eBUS);
 
 	general.ppu = ePPU;
 	general.ppu->located = index;
@@ -89,10 +101,15 @@ extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]
 	general.dma->located = index + 2;
 	setupDMA(emulator, &bank_array[general.dma->located]);
 
-	bank_array[index + 3] = eRAM->wRAM_lo; /* if our rom have 16 banks, our RAM
-	will be located at 16 + 3 = 19 and above */
-	bank_array[index + 4] = eRAM->wRAM_hi;
+	general.ram = eRAM;
+	bank_array[index + 3] = general.ram->wRAM_lo;
+	bank_array[index + 4] = general.ram->wRAM_hi;
 
+
+	/* doing this for my own crazy sanity
+	 * TODO: DUDE IT'S BEEN 1 WEEK WTF IS WRONG */
+	printf("%p %p \n", bank_array[index + 3], general.ram->wRAM_lo);
+	printf("%p %p \n", bank_array[index + 4], general.ram->wRAM_hi);
 }
 
 extern void initEmu(rom* rom_Ptr) {
@@ -103,6 +120,8 @@ extern void initEmu(rom* rom_Ptr) {
 	}
 */
 
+
+	eBUS = malloc(sizeof(snBUS));
 	ePPU = malloc(sizeof(snPPU));
 	eDMA = malloc(sizeof(snDMA));
 	eAPU = malloc(sizeof(snAPU));
@@ -110,10 +129,9 @@ extern void initEmu(rom* rom_Ptr) {
 	eSPC = malloc(sizeof(snSPC));
 	eRAM = malloc(sizeof(snRAM));
 
-	general.memory = &memory;
-
 	eRAM->wRAM_lo = malloc(0x10000);
 	eRAM->wRAM_hi = malloc(0x10000);
+	general.memory = &memory;
 	mapPtrBank(&general, rom_Ptr->banks, memory.bank_array);
 	fclose(rom_File);
 
@@ -121,14 +139,13 @@ extern void initEmu(rom* rom_Ptr) {
 
 	/* basic setup */
 	general.cpu = eCPU;
-	general.active = malloc(1);
-	*general.active = 0;
-	general.mainFetch = mainFetch;
 	setupCPU(&general, rom_Ptr);
-
-	/* call our main fetch */
+	
 	mainFetch(&general);
 
+	free(ePPU);
+	free(eSPC);
+	free(eRAM);
 	free(eCPU);
 	free(ePPU);
 	free(eDMA);

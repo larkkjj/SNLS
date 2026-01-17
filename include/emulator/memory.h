@@ -7,18 +7,16 @@
 #include "emulator/rom.h"
 
 typedef struct emMemory {
+	u8	bank_count;
 	u16	bank_target;
 	u16	address_target;
-	u8	bank_count;
+	u8*	pointerTarget; /* this is really useful */
 	u8*	bank_array[];
 } emMemory;
 
 typedef struct snRAM {
 	u8*	wRAM_lo;
 	u8*	wRAM_hi;
-	u8*	wRAM_ext1;
-	u8*	wRAM_ext2;
-
 	u8*	vRAM;
 } snRAM;
 
@@ -31,5 +29,7 @@ extern u16 holdAddr;
 extern u8 holdBankAddr;
 extern u16 holdLoAddr;
 extern u16 holdHiAddr;
+extern u8 syncCycle[0xFF];
+extern u8 syncCounter;
 
 #endif

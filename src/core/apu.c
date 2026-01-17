@@ -6,7 +6,7 @@
 #include "emulator/main.h"
 #include "core/apu.h"
 
-static void (*snSPC_opcodes[])(emGeneral* emulator);
+static void (*snSPC_opcodes[0xFF])(emGeneral* emulator);
 
 static void generic(emGeneral* emulator) {
 	printf("spc_opcode: generic opcode / not implemented\n");

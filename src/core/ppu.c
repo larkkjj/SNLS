@@ -22,8 +22,6 @@ static void fetchPPU(emGeneral* emulator) {
 }
 
 extern void setupPPU(emGeneral* emulator, u8** buffer) {
-
-	emulator->ppu->fetch = fetchPPU;
 	buffer[0x00] = &emulator->ppu->IniDisp;
 	buffer[0x01] = &emulator->ppu->ObjSel;
 	buffer[0x02] = &emulator->ppu->OamADDL;
