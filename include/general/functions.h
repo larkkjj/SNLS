@@ -8,10 +8,12 @@ extern void setupDMA(emGeneral* emulator, u8** buffer);
 extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer);
 extern void setupPPU(emGeneral* emulator, u8** buffer);
 extern void setupCPU(emGeneral* emulator, rom* rom_Ptr);
-extern void setupBUS(emGeneral* emulator, snBUS* bus);
+
+extern void setupOpenBUS(emGeneral* emulator, snesBUS* busParent);
+extern void setupSPCBUS(emGeneral* emulator, spcBUS* busParent);
 
 extern void initWindow();
-extern void pollWindow();
+extern void pollWindow(emGeneral* emulator);
 
 extern void openRom(char* rom_name, rom* rom_Ptr);
 extern void attachROM(u8* buffer);

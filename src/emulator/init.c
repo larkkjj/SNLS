@@ -23,14 +23,14 @@ snPPU* ePPU = NULL;
 snDMA* eDMA = NULL;
 snAPU* eAPU = NULL;
 snRAM* eRAM = NULL;
-snBUS* eBUS = NULL;
+snesBUS* eBUS = NULL;
 
-emGeneral general;
-emMemory memory;
+static emGeneral general;
+static emMemory memory;
 
 typedef struct snesSync {
-	u8	order[0xFF];
 	u8	counter;
+	u8	order[];
 } snesSync;
 
 u8 cpuOperation = 0x01;
@@ -40,14 +40,22 @@ u8 dmaOperation = 0x08;
 
 void mainFetch(emGeneral* emulator) {
 	snesSync sync;
-	for(int i = 0x00; i < 0xFF; i++) {
+	emulator->allowedFetch = 0;
+	for(unsigned int i = 0x00; i <= 0xFF; i++) {
 		sync.order[i] = cpuOperation;
-		/* only cpu for testing */
+		if (i % 3 == 0) {
+			sync.order[i] |= spcOperation;
+		} else if (i % 5 == 0) {
+			sync.order[i] |= ppuOperation;
+		}
 	}
 	/* our main infinite loop' which is basically
 	 * a sync cycle fetch */
 	while (1) {
-		pollWindow();
+		#ifdef SNLS_WITH_WINDOW
+		pollWindow(emulator);
+		#endif
+		if (emulator->allowedFetch) {
 		if (sync.order[sync.counter] & 0x01) {
 			printf("sync_counter: fetching cpu...\n");
 			emulator->cpu->fetch(emulator);
@@ -66,6 +74,7 @@ void mainFetch(emGeneral* emulator) {
 		printf("%X %X \n", sync.counter, sync.order[sync.counter]);
 
 		sync.counter++;
+		}
 	}
 }
 
@@ -87,7 +96,7 @@ extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]
 	general.memory->bank_count = index;
 	general.memory->pointerTarget = malloc(sizeof(u8*));
 	
-	setupBUS(emulator, eBUS);
+	setupOpenBUS(emulator, eBUS); /* our open-bus */
 
 	general.ppu = ePPU;
 	general.ppu->located = index;
@@ -110,6 +119,7 @@ extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]
 	 * TODO: DUDE IT'S BEEN 1 WEEK WTF IS WRONG */
 	printf("%p %p \n", bank_array[index + 3], general.ram->wRAM_lo);
 	printf("%p %p \n", bank_array[index + 4], general.ram->wRAM_hi);
+	/* NOT TODO: YEA I SOLVED IT, I'M CRAZY HAHAHAHA */
 }
 
 extern void initEmu(rom* rom_Ptr) {
@@ -121,7 +131,7 @@ extern void initEmu(rom* rom_Ptr) {
 */
 
 
-	eBUS = malloc(sizeof(snBUS));
+	eBUS = malloc(sizeof(snesBUS));
 	ePPU = malloc(sizeof(snPPU));
 	eDMA = malloc(sizeof(snDMA));
 	eAPU = malloc(sizeof(snAPU));
@@ -135,7 +145,9 @@ extern void initEmu(rom* rom_Ptr) {
 	mapPtrBank(&general, rom_Ptr->banks, memory.bank_array);
 	fclose(rom_File);
 
-	initWindow();
+	#ifdef SNLS_WITH_WINDOW
+		initWindow();
+	#endif
 
 	/* basic setup */
 	general.cpu = eCPU;

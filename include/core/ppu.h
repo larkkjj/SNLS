@@ -39,6 +39,7 @@ typedef struct snPPU {
 
 	u8	cgAdd;
 	u8	cgData;
+	u8	cgDataRead;
 
 	void		(*fetch)(emGeneral* emulator);
 } snPPU;
@@ -47,4 +48,7 @@ typedef struct p_Tile {
     u16     tileSprite;
 } p_Tile;
 
+
+static u8 NTSC_SCREEN[256][224];
+static u8 PAL_SCREEN[256][264];
 #endif

@@ -53,19 +53,46 @@ static u8 IPL_NTSC[0x40] = {
 
 
 typedef struct snSPC {
-	u8*	    PC;
-	u8	    A;
-	u8	    X;
-	u8	    Y;
-	u16*	YA; /* A << 8 | Y*/
-	u8	    SP; /* Stack Pointer */
-	u8	    Flags; /* Same as CPU flags or PSW if you prefer */
+	u8*		PC;
+	u8		A;
+	u8		X;
+	u8		Y;
+	u16*		YA; /* A << 8 | Y*/
+	u8		SP; /* Stack Pointer */
+	u8		flags; /* Same as CPU flags or PSW if you prefer */
+
+	spcBUS*		bus; /* yes, an independent bus
+
+				i love you SPC-700   */
+
+	u8		test; /* he's just here */
+	u8		control;
+	u8		DSPAddr;
+	u8		DSPData;
+
+	u8		T0target;
+	u8		T1target;
+	u8		T2target;
+
+	u8		T0out;
+	u8		T1out;
+	u8		T2out;
+
 
 	void	(*fetch)(emGeneral* emulator);
 } snSPC;
 
 typedef struct snDSL {
 	/* this is really responsible for SNES AUDIO */
+	u32		channel1;
+	u32		channel2;
+	u32		channel3;
+	u32		channel4;
+	u32		channel5;
+	u32		channel6;
+	u32		channel7;
+	u32		channel8;
+	
 } snDSL;
 
 typedef struct snAPU {

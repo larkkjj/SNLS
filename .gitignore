@@ -2,4 +2,4 @@ roms/
 development/ppu/tile.c
 development/ppu/map.c
 NU_interpreter
-build/
+bin/

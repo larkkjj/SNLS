@@ -6,22 +6,36 @@
 #include "core/cpu.h"
 #include "emulator/memory.h"
 
-typedef struct snBUS {
+typedef struct snesBUS {
 	u8		bank;
+	u16		value;
 	u16		address;
-	u8		(*readU8const)(emGeneral* ptrParent, u16 offset);
-	u16		(*readU16const)(emGeneral* ptrParent, u16 offset);
-	void		(*readU16absolute)(emGeneral* ptrParent, u16 offset);
-	u8*		(*write)(emGeneral* ptrParent, u16 offset, u32 value);
+
+	void		(*readU8const)(snesBUS* busParent, u16 offset);
+	void		(*readU16const)(snesBUS* busParent);
+	void		(*readU16absolute)(snesBUS* busParent, u16 offset);
+	void		(*readU16absoluteAddr)(snesBUS* busParent, u16 offset);
+	void		(*write)(snesBUS* busParent, u32 value);
+	void		(*readU24absolute)(snesBUS* busParent, u16 offset);
 	
-	emGeneral*	ptrParent;
+	emGeneral*	emulator;
 	u8*		pointer;
-} snBUS;
+} snesBUS;
 
-extern u8 sn_Mread_u8_const(emGeneral* emulator, u16 offset);
-extern u16 sn_Mread_u16_const(emGeneral* emulator, u16 offset);
+typedef struct spcBUS {
+	u8		bank;
+	u16		value;
+	u16		address;
 
-extern u8* sn_Mread_u24_absolute(emGeneral* emulator, u8 pagemode);
+	void		(*readU8const)(spcBUS* busParent, u16 offset);
+	void		(*readU8absolute)(spcBUS* busParent, u16 offset);
+	void		(*readU16const)(spcBUS* busParent);
+	void		(*readU16absolute)(spcBUS* busParent, u16 offset);
+	void		(*write)(spcBUS* busParent, u32 value);
+
+	emGeneral*	emulator;
+	u8*		pointer;
+} spcBUS;
 
 #endif
 

@@ -13,10 +13,11 @@ typedef struct emGeneral {
 	snPPU*		ppu;
 	snAPU*		apu;
 	snDMA*		dma;
-	snBUS*		bus;
+	snesBUS*	bus;
 	emMemory*	memory;
 	u8*		active;
 
+	bool	allowedFetch;
 } emGeneral;
 
 #endif

@@ -29,7 +29,5 @@ extern u16 holdAddr;
 extern u8 holdBankAddr;
 extern u16 holdLoAddr;
 extern u16 holdHiAddr;
-extern u8 syncCycle[0xFF];
-extern u8 syncCounter;
 
 #endif

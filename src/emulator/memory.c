@@ -63,9 +63,11 @@ extern void getMappedBank(u8 index, u16 address, emGeneral* emulator) {
 		temp_address = address;
 		temp_bank = emulator->memory->bank_count + 4;
 	}
+	printf("get_mapped_bank: bank: %X address: %X \n", index, address);
 	emulator->bus->address = temp_address;
 	emulator->bus->bank = temp_bank;
 	emulator->bus->pointer = &emulator->memory->bank_array[temp_bank][temp_address];
+	emulator->bus->value = *emulator->bus->pointer; 
 	return;
 };
 

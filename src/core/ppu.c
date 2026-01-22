@@ -7,17 +7,13 @@
 #include "emulator/main.h"
 
 static void fetchPPU(emGeneral* emulator) {
-	*emulator->active |= 0x02;
 	/* this doesn't "fetch" the ppu, it just prints a value
 	 * of a register to check if setupping is working */
-	printf("ppu_fetch: ppu-> %X %X %X %X\n", emulator->ppu->IniDisp, emulator->ppu->BgMode, emulator->ppu->cgAdd, emulator->ppu->cgData);
-	*emulator->active ^= 0x02;
+	printf("ppu_fetch: ini_disp: 0x%X bgmode: 0x%X cgadd: 0x%X cgdata: 0x%X cgdataread: 0x%X\n", emulator->ppu->IniDisp, emulator->ppu->BgMode, emulator->ppu->cgAdd, emulator->ppu->cgData, emulator->ppu->cgDataRead);
 
 	p_Tile sprite;
-
 	sprite.tileSprite = emulator->ppu->VmAddL << 8 | emulator->ppu->VmAddH;
-	printf("ppu -> %x\n", sprite.tileSprite);
-
+	/// sprite.palette = emulator->ppu->cgData;
 	return;
 }
 
@@ -49,5 +45,8 @@ extern void setupPPU(emGeneral* emulator, u8** buffer) {
 
 	buffer[0x21] = &emulator->ppu->cgAdd;
 	buffer[0x22] = &emulator->ppu->cgData;
+	buffer[0x23] = &emulator->ppu->cgDataRead;
+
+	emulator->ppu->fetch = fetchPPU;
 	return;
 }

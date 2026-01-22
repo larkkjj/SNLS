@@ -1,8 +1,10 @@
 binary		:= SNLS.ELF
 ps2		?= 0
+window		?= 1
 debug		?= 0
 flags		:= -g -DDEBUG=0 --std=c23
-includes	:= -Iinclude -I. -Iinclude/general
+libraries	:= -lm -Llibs -lraylib
+includes	:= -Iinclude/raylib -Iinclude -I. -Iinclude/general
 
 ifeq ($(ps2), 1)
 	source		+= src/platform/ps2
@@ -28,6 +30,9 @@ else
 	prefix		:=
 endif
 
+ifeq	($(window), 1)
+	flags	+= -DSNLS_WITH_WINDOW
+endif
 ifeq  ($(debug), 1)
 	flags		+= -fsanitize=address
 	libraries	+= -lasan
