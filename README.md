@@ -37,12 +37,16 @@ one single operation
 there's more
 - [ ] Idk, maybe another lib aimed for graphics rendering instead of SDL + OpenGL
 - [ ] Fix some order updating flags, some flags are updated before the operation
+- [ ] Implement StackPointer Lock Behavior
+- [ ] Fix emulation mode behavior, it only changes some opcodes behavior, but doesn't make
+any influence to the registers or something
 
 ## Known Problems
-In this stage, there's a __100% of chance__ of the emulator gets into a infinite loop, this is due to a mix of __non-implemented__ resources and CPU operations, for example, if you do a __BEQ__ operation to confirm that everything is ok with your APU, PPU, howewer, as they're  not fully implemented, they cannot send info.
+In this stage, there's a __95.5% of chance__ of the emulator gets into a infinite loop, this is due to a mix of __non-implemented__ resources and CPU operations, for example, if you do a __BEQ__ operation to confirm that everything is ok with your APU, PPU, howewer, as they're  not fully implemented, they cannot send info.
 
 In response of the item above, this is already being solved along with mapping and fetch.
 
+### (This is an older code)
 ```c
 extern inline void sn_Mwrite(u8 bank, u8* address, u8 value) {
     **mBank[bank][*address] = value; /* Mapped as PPU->IniDisp */

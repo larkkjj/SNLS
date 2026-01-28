@@ -667,6 +667,7 @@ extern void setupCPU(emGeneral *emulator, rom* rom_Ptr) {
 	emulator->cpu->sn_MFlag = 1;
 	emulator->cpu->sn_IFlag = 0;
 	emulator->cpu->sn_XFlag = 1;
+	emulator->cpu->SP = 0x100;
 
 	/* this sets registers to zero
 	 * this is only made for debugging
@@ -675,7 +676,6 @@ extern void setupCPU(emGeneral *emulator, rom* rom_Ptr) {
 	emulator->cpu->P = 0;
 	emulator->cpu->PB = 0;
 	emulator->cpu->DBR = 0;
-	emulator->cpu->SP = 0;
 	emulator->cpu->cycles = 0;
 	emulator->cpu->fetch = fetchCPU;
 
