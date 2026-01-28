@@ -59,11 +59,11 @@ void mainFetch(emGeneral* emulator) {
 		}
 		if (sync.order[sync.counter] & 0x02) {
 			printf("sync_counter: fetching ppu...\n");
-			emulator->ppu->fetch(emulator);
+			emulator->ppu->fetch(emulator->ppu);
 		}
 		if (sync.order[sync.counter] & 0x04) {
 			printf("sync_counter: fetching spc...\n");
-			emulator->apu->spc->fetch(emulator);
+			emulator->apu->spc->fetch(emulator->apu->spc);
 		}
 		if (sync.order[sync.counter] & 0x08) {
 			printf("sync_counter: fetching DMA ...(at least we're supposed to\n");	

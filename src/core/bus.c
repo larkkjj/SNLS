@@ -79,7 +79,7 @@ static void writeSNESindirect_SPC(spcBUS* busParent, u16 offset, u16 value, u8 m
 	};
 	busParent->value = value;
 	printf("spc_bus_write_indirect: writing %X to %X \n", busParent->value, busParent->address);
-	busParent->pointer = &busParent->emulator->apu->internalRAM[busParent->address];
+	busParent->pointer = &busParent->emulator->apu->spc->internalRAM[busParent->address];
 	*busParent->pointer = busParent->value;
 };
 
@@ -149,7 +149,7 @@ static void readU16absoluteIndirect_SPC(spcBUS* busParent, u8 mode) {
 
 	switch (mode) {
 		case 0x02:
-			busParent->value = busParent->emulator->apu->internalRAM[busParent->emulator->apu->spc->DP];
+			busParent->value = busParent->emulator->apu->spc->internalRAM[busParent->emulator->apu->spc->DP];
 		break;
 		default:
 

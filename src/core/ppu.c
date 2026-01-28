@@ -6,13 +6,13 @@
 #include "emulator/memory.h"
 #include "emulator/main.h"
 
-static void fetchPPU(emGeneral* emulator) {
+static void fetchPPU(snPPU* ppu) {
 	/* this doesn't "fetch" the ppu, it just prints a value
 	 * of a register to check if setupping is working */
-	printf("ppu_fetch: ini_disp: 0x%X bgmode: 0x%X cgadd: 0x%X cgdata: 0x%X cgdataread: 0x%X\n", emulator->ppu->IniDisp, emulator->ppu->BgMode, emulator->ppu->cgAdd, emulator->ppu->cgData, emulator->ppu->cgDataRead);
+	printf("ppu_fetch: ini_disp: 0x%X bgmode: 0x%X cgadd: 0x%X cgdata: 0x%X cgdataread: 0x%X\n", ppu->IniDisp, ppu->BgMode, ppu->cgAdd, ppu->cgData, ppu->cgDataRead);
 
 	p_Tile sprite;
-	sprite.tileSprite = emulator->ppu->VmAddL << 8 | emulator->ppu->VmAddH;
+	sprite.tileSprite = ppu->VmAddL << 8 | ppu->VmAddH;
 	/// sprite.palette = emulator->ppu->cgData;
 	return;
 }

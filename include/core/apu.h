@@ -73,6 +73,7 @@ typedef struct snSPC {
 	u16		SP; /* Stack Pointer */
 	u8		PSW; /* Same as CPU flags or PSW if you prefer */
 
+	u8		internalRAM[0xFFFF];
 	spcBUS*		bus; /* yes, an independent bus
 
 				i love you SPC-700   */
@@ -91,11 +92,11 @@ typedef struct snSPC {
 	u8		T2out;
 
 
-	void		(*fetch)(emGeneral* emulator);
-	void		(*opcode[0xFF])(emGeneral* emulator);
+	void		(*fetch)(snSPC* spc);
+	void		(*opcode[0xFF])(snSPC* spc);
 } snSPC;
 
-typedef struct snDSL {
+typedef struct snDSP {
 	/* this is really responsible for SNES AUDIO */
 	u32		channel1;
 	u32		channel2;
@@ -106,12 +107,19 @@ typedef struct snDSL {
 	u32		channel7;
 	u32		channel8;
 	
-} snDSL;
+} snDSP;
 
 typedef struct snAPU {
-	u8	    located;
-	u8	    internalRAM[0xFFFF];
+	u8		located;
+
+	u8		IO0;
+	u8		IO1;
+	u8		IO2;
+	u8		IO3;
+
 	snSPC*		spc;
+	snDSP*		dsp;
+
 } snAPU;
 
 #endif

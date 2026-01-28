@@ -41,7 +41,7 @@ typedef struct snPPU {
 	u8	cgData;
 	u8	cgDataRead;
 
-	void		(*fetch)(emGeneral* emulator);
+	void		(*fetch)(snPPU* ppu);
 } snPPU;
 
 typedef struct p_Tile {

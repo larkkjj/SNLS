@@ -40,8 +40,6 @@ typedef struct snCPU {
 	bool 		sn_EFlag;
 	bool 		sn_BFlag;
 
-	u8		cycles;
-
 } snCPU;
 
 typedef enum {
