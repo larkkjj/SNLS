@@ -24,10 +24,11 @@ typedef struct emROM {
 	u8*	buffer;
 } emROM;
 
-
-extern u16 holdAddr;
-extern u8 holdBankAddr;
-extern u16 holdLoAddr;
-extern u16 holdHiAddr;
+extern u8 hLoByte;
+extern u8 hHiByte;
+extern u8 hBank;
+extern u16 hAddr;
+extern u16 hLoAddr;
+extern u16 hHiAddr;
 
 #endif

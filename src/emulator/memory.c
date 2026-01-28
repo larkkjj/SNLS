@@ -16,12 +16,12 @@ u8* memory_sPPU = NULL;
 u8* memory_iCPU = NULL;
 u8* memory_rDMA = NULL;*/
 
-u8 holdBankAddr = 0x00;
-u16 holdAddr = 0x0000;
-u16 holdLoAddr = 0x0000;
-u16 holdHiAddr = 0x0000;
-u16 temp_address;
-u8 temp_bank;
+u8 hBank = 0x00;
+u16 hAddr = 0x0000;
+u16 hLoAddr = 0x0000;
+u16 hHiAddr = 0x0000;
+u8 hLoByte;
+u8 hHiByte;
 
 /* TODO: Make a new function unifying PPU, APU
  * DMA, and buffer setup, something like this
@@ -34,39 +34,44 @@ extern void attachROM(u8* buffer) {
 	return;
 };
 
-extern void getMappedBank(u8 index, u16 address, emGeneral* emulator) {
+extern inline void getMappedBank(u8 index, u16 address, emGeneral* emulator) {
+	u8 tAddr;
+	u8 tBank;
 	if (index >= 0x00 && index <= 0x3F) {
-		if (address >= 0x8000) {
+		if (address <= 0x200) {
+			tAddr = address - 0x8000;
+			tBank = emulator->memory->bank_count + 3;	
+		} else if (address >= 0x8000) {
 			/* goes to rom*/
-			temp_address = address - 0x8000;
-			temp_bank = index;
+			tAddr = address - 0x8000;
+			tBank = index;
 		} else if (address >= 0x2100 && address <= 0x213F){
 			/* falls back to ppu! */
-			temp_address = address - 0x2100;
-			temp_bank = emulator->ppu->located;
+			tAddr = address - 0x2100;
+			tBank = emulator->ppu->located;
 		} else if (address >= 0x2140 && address <= 0x2143) {
 			/* falls back to apu! */
-			temp_address = address - 0x2140;
-			temp_bank = emulator->apu->located;
+			tAddr = address - 0x2140;
+			tBank = emulator->apu->located;
 		} else if (address == 0x4200 || address == 0x4201) {
-			temp_address = address - 0x4200;
-			temp_bank = emulator->memory->bank_count + 3;
+			tAddr = address - 0x4200;
+			tBank = emulator->memory->bank_count + 3;
 			printf("we're supposed to got joypad registers, but not implemented yet\n");
 		} else if (address == 0x420B || address == 0x420C) {
-			temp_address = address - 0x420B;
-			temp_bank = emulator->dma->located;
+			tAddr = address - 0x420B;
+			tBank = emulator->dma->located;
 		}
 	} else if (index == 0x7E) {
-		temp_address = address;
-		temp_bank = emulator->memory->bank_count + 3;
+		tAddr = address;
+		tBank = emulator->memory->bank_count + 3;
 	} else if (index == 0x7F) {
-		temp_address = address;
-		temp_bank = emulator->memory->bank_count + 4;
+		tAddr = address;
+		tBank = emulator->memory->bank_count + 4;
 	}
 	printf("get_mapped_bank: bank: %X address: %X \n", index, address);
-	emulator->bus->address = temp_address;
-	emulator->bus->bank = temp_bank;
-	emulator->bus->pointer = &emulator->memory->bank_array[temp_bank][temp_address];
+	emulator->bus->address = tAddr;
+	emulator->bus->bank = tBank;
+	emulator->bus->pointer = &emulator->memory->bank_array[tBank][tAddr];
 	emulator->bus->value = *emulator->bus->pointer; 
 	return;
 };

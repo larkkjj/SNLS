@@ -38,7 +38,6 @@ int splitROM(rom* rom_Ptr) {
 	switch (rom_Ptr->type) {
 		case 0x20:
 			rom_Ptr->header = 0x7FFC + rom_Ptr->offset;
-			rom_Ptr->banksize = 0x8000;
 			printf("LoROM \n");
 		break;
 		case 0x21:

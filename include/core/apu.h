@@ -4,6 +4,15 @@
 #include "general/references.h"
 #include "general/types.h"
 
+#define SPC_N_FLAG 	(0x1 << 7)
+#define SPC_V_FLAG 	(0x1 << 6)
+#define SPC_P_FLAG 	(0x1 << 5)
+#define SPC_B_FLAG 	(0x1 << 4)
+#define SPC_H_FLAG 	(0x1 << 3)
+#define SPC_I_FLAG 	(0x1 << 2)
+#define SPC_Z_FLAG 	(0x1 << 1)
+#define SPC_C_FLAG 	(0x1)
+
 static u8 IPL_NTSC[0x40] = {
 	0xCD, 0xEF, /* load 0xEF */
 	0xBD,	    /* copy X to SP */
@@ -54,12 +63,15 @@ static u8 IPL_NTSC[0x40] = {
 
 typedef struct snSPC {
 	u8*		PC;
+	u16		DP; /* This is not a register, this is just for
+	tell the SPC-700 the base offset, which can be 0x100 or simply 0 */
+
 	u8		A;
 	u8		X;
 	u8		Y;
 	u16*		YA; /* A << 8 | Y*/
-	u8		SP; /* Stack Pointer */
-	u8		flags; /* Same as CPU flags or PSW if you prefer */
+	u16		SP; /* Stack Pointer */
+	u8		PSW; /* Same as CPU flags or PSW if you prefer */
 
 	spcBUS*		bus; /* yes, an independent bus
 
@@ -79,7 +91,8 @@ typedef struct snSPC {
 	u8		T2out;
 
 
-	void	(*fetch)(emGeneral* emulator);
+	void		(*fetch)(emGeneral* emulator);
+	void		(*opcode[0xFF])(emGeneral* emulator);
 } snSPC;
 
 typedef struct snDSL {
@@ -98,7 +111,7 @@ typedef struct snDSL {
 typedef struct snAPU {
 	u8	    located;
 	u8	    internalRAM[0xFFFF];
-	snSPC*	spc;
+	snSPC*		spc;
 } snAPU;
 
 #endif

@@ -15,8 +15,6 @@
 #include "general/tools.h"
 #include "general/functions.h"
 
-#include "SDL.h"
-
 snCPU* eCPU = NULL;
 snSPC* eSPC = NULL;
 snPPU* ePPU = NULL;
@@ -55,7 +53,6 @@ void mainFetch(emGeneral* emulator) {
 		#ifdef SNLS_WITH_WINDOW
 		pollWindow(emulator);
 		#endif
-		if (emulator->allowedFetch) {
 		if (sync.order[sync.counter] & 0x01) {
 			printf("sync_counter: fetching cpu...\n");
 			emulator->cpu->fetch(emulator);
@@ -73,8 +70,11 @@ void mainFetch(emGeneral* emulator) {
 		}
 		printf("%X %X \n", sync.counter, sync.order[sync.counter]);
 
-		sync.counter++;
+		if (sync.counter == 0xFF) {
+			printf("sync_counter: we made 256 fetches (CPU + SPC + PPU)\n");
+			usleep(10000);
 		}
+		sync.counter++;
 	}
 }
 

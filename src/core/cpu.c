@@ -90,12 +90,20 @@ static void sn_OpCMP_const(emGeneral* emulator) {
 };
 
 static void sn_OpCMP_addr(emGeneral* emulator) {
-	emulator->bus->readU16absoluteAddr(emulator->bus, 0x0);
+	if (!emulator->cpu->sn_MFlag) {
+		emulator->bus->readU16absoluteIndirect(emulator->bus, 0x00, 0);
+		printf("cmp: 16-bit mode\n");
+	} else {
+		emulator->bus->readU16absolute(emulator->bus, 0x00);
+		printf("cmp: 8-bit mode\n");
+	};
+
 	(emulator->cpu->sn_NFlag = (emulator->cpu->A - emulator->bus->value) < 0) ? 1 : 0;
 	(emulator->cpu->sn_ZFlag = (emulator->cpu->A - emulator->bus->value) == 0) || (emulator->cpu->A == emulator->bus->value) ? 1 : 0;
 	printf("cmp_address: address [%X:%X] comparing %X with accumulator: %X \n", emulator->bus->bank, emulator->bus->address, emulator->bus->value, emulator->cpu->A);
 	++emulator->cpu->PC;
 	emulator->cpu->cycles += 4;
+	usleep(10000);
 };
 
 static void sn_OpDEA(emGeneral* emulator) {
@@ -167,10 +175,10 @@ static void sn_OpINC_addr(emGeneral* emulator) {
 static void sn_OpINC_dpX(emGeneral* emulator) {
 	//holdAddr = *//sn_Mwrite(emulator, sn_Mread_u8_const(emulator, emulator->cpu->DP), emulator->cpu->X, +1);
 	emulator->bus->readU8const(emulator->bus, emulator->cpu->DP + emulator->cpu->X);
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 6;
 	emulator->cpu->sn_NFlag = ((s16) emulator->bus->value < 0 ? 1 : 0);
 	emulator->cpu->sn_ZFlag = (emulator->bus->value == 0 ? 1 : 0);
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -181,6 +189,7 @@ static void sn_OpINC_addrX(emGeneral* emulator) {
 	emulator->cpu->sn_NFlag = ((s16) emulator->bus->value < 0 ? 1 : 0);
 	emulator->cpu->sn_ZFlag = (emulator->bus->value == 0 ? 1 : 0);
 	emulator->cpu->cycles += 7;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -188,8 +197,8 @@ static void sn_OpINX(emGeneral* emulator) {
 	emulator->cpu->X += 1;
 	emulator->cpu->sn_NFlag = ((s16) emulator->cpu->X < 0 ? 1 : 0);
 	emulator->cpu->sn_ZFlag = (emulator->cpu->X == 0 ? 1 : 0);
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 2;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -197,8 +206,8 @@ static void sn_OpINY(emGeneral* emulator) {
 	emulator->cpu->Y += 1;
 	emulator->cpu->sn_NFlag = ((s16) emulator->cpu->Y < 0 ? 1 : 0);
 	emulator->cpu->sn_ZFlag = (emulator->cpu->Y == 0 ? 1 : 0);
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 2;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -207,8 +216,8 @@ static void sn_OpJMP_addr(emGeneral* emulator) {
 	//emulator->cpu->PC = sn_Mread_u16(emulator, 0) - 1;
 	emulator->bus->readU16absolute(emulator->bus, 0);
 	emulator->cpu->PC = emulator->bus->pointer;
-	//emulator->cpu->PC++;
 	emulator->cpu->cycles += 3;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -354,15 +363,15 @@ static void sn_OpSEC(emGeneral* emulator) {
 
 static void sn_OpSED(emGeneral* emulator) {
 	emulator->cpu->sn_DFlag = 1;
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 2;
+	emulator->cpu->PC++;
 	return;
 };
 
 static void sn_OpSEI(emGeneral* emulator) {
 	emulator->cpu->sn_IFlag = 1;
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 2;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -371,13 +380,13 @@ static void sn_OpREP(emGeneral* emulator) {
 	emulator->cpu->sn_CFlag = (emulator->bus->value & 0x80 ? 0 : emulator->cpu->sn_CFlag);
 	emulator->cpu->sn_VFlag = (emulator->bus->value & 0x40 ? 0 : emulator->cpu->sn_VFlag);
 	emulator->cpu->sn_MFlag = (emulator->bus->value & 0x20 ? 0 : emulator->cpu->sn_MFlag);
-	emulator->cpu->X = (emulator->bus->value & 0x10 ? 0 : emulator->cpu->sn_XFlag);
+	emulator->cpu->sn_XFlag = (emulator->bus->value & 0x10 ? 0 : emulator->cpu->sn_XFlag);
 	emulator->cpu->sn_DFlag = (emulator->bus->value & 0x08 ? 0 : emulator->cpu->sn_DFlag);
 	emulator->cpu->sn_IFlag = (emulator->bus->value & 0x04 ? 0 : emulator->cpu->sn_IFlag);
 	emulator->cpu->sn_ZFlag = (emulator->bus->value & 0x02 ? 0 : emulator->cpu->sn_ZFlag);
 	emulator->cpu->sn_EFlag = (emulator->bus->value & 0x01 ? 0 : emulator->cpu->sn_EFlag);
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 3;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -405,13 +414,13 @@ static void sn_OpSEP(emGeneral* emulator) {
 	emulator->cpu->sn_CFlag = (emulator->bus->value & 0x80 ? 1 : emulator->cpu->sn_CFlag);
 	emulator->cpu->sn_VFlag = (emulator->bus->value & 0x40 ? 1 : emulator->cpu->sn_VFlag);
 	emulator->cpu->sn_MFlag = (emulator->bus->value & 0x20 ? 1 : emulator->cpu->sn_MFlag);
-	emulator->cpu->X = (emulator->bus->value & 0x10 ? 1 : emulator->cpu->sn_XFlag);
+	emulator->cpu->sn_XFlag = (emulator->bus->value & 0x10 ? 1 : emulator->cpu->sn_XFlag);
 	emulator->cpu->sn_DFlag = (emulator->bus->value & 0x08 ? 1 : emulator->cpu->sn_DFlag);
 	emulator->cpu->sn_IFlag = (emulator->bus->value & 0x04 ? 1 : emulator->cpu->sn_IFlag);
 	emulator->cpu->sn_ZFlag = (emulator->bus->value & 0x02 ? 1 : emulator->cpu->sn_ZFlag);
 	emulator->cpu->sn_EFlag = (emulator->bus->value & 0x01 ? 1 : emulator->cpu->sn_EFlag);
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 3;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -419,8 +428,17 @@ static void sn_OpTAX(emGeneral* emulator) {
 	emulator->cpu->X = emulator->cpu->A;
 	emulator->cpu->sn_NFlag = ((s16) emulator->cpu->X < 0 ? 1 : 0);
 	emulator->cpu->sn_ZFlag = (emulator->cpu->X == 0 ? 1 : 0);
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 2;
+	emulator->cpu->PC++;
+	return;
+};
+
+static void sn_OpTCS(emGeneral* emulator) {
+	emulator->cpu->SP = emulator->cpu->A;
+	emulator->cpu->sn_NFlag = ((s16) emulator->cpu->SP < 0 ? 1 : 0);
+	emulator->cpu->sn_ZFlag = (emulator->cpu->SP == 0 ? 1 : 0);
+	emulator->cpu->cycles += 2;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -428,8 +446,8 @@ static void sn_OpTAY(emGeneral* emulator) {
 	emulator->cpu->Y = emulator->cpu->A;
 	emulator->cpu->sn_NFlag = ((s16) emulator->cpu->Y < 0 ? 1 : 0);
 	emulator->cpu->sn_ZFlag = (emulator->cpu->Y == 0 ? 1 : 0);
-	emulator->cpu->PC++;
 	emulator->cpu->cycles += 2;
+	emulator->cpu->PC++;
 	return;
 };
 
@@ -490,7 +508,7 @@ static void fetchCPU(emGeneral* emulator) {
 				
 			that's a strange coincidence */
 
-	printf("cpu_fetch: A: %X X: %X Y: %X E: %X M: %X I: %X\n", emulator->cpu->A, emulator->cpu->X, emulator->cpu->Y, emulator->cpu->sn_EFlag, emulator->cpu->sn_MFlag, emulator->cpu->sn_IFlag);
+	printf("cpu_fetch: A: %X X: %X Y: %X SP: %X E: %X M: %X I: %X\n", emulator->cpu->A, emulator->cpu->X, emulator->cpu->Y, emulator->cpu->SP, emulator->cpu->sn_EFlag, emulator->cpu->sn_MFlag, emulator->cpu->sn_IFlag);
 	printf("cpu_opcode: %X \n", *emulator->cpu->PC);
 	printf("cpu_cycles: %d\n", emulator->cpu->cycles);
 	switch (*(emulator->cpu->PC)) {
@@ -614,6 +632,9 @@ static void fetchCPU(emGeneral* emulator) {
 		case _tcd:
 			sn_OpTCD(emulator);
 			break;
+		case _tcs:
+			sn_OpTCS(emulator);
+			break;
 		case _txy:
 			sn_OpTXY(emulator);
 			break;
@@ -636,7 +657,6 @@ static void fetchCPU(emGeneral* emulator) {
 			++emulator->cpu->PC;
 			break;
 	};
-	emulator->allowedFetch = 0;
 	return;
 }
 
@@ -645,20 +665,21 @@ extern void setupCPU(emGeneral *emulator, rom* rom_Ptr) {
 	/* Emulation Mode */
 	emulator->cpu->sn_EFlag = 1;
 	emulator->cpu->sn_MFlag = 1;
-	emulator->cpu->X = 1;
+	emulator->cpu->sn_IFlag = 0;
+	emulator->cpu->sn_XFlag = 1;
 
 	/* this sets registers to zero
 	 * this is only made for debugging
 	 * the real SNES can point these
 	 * values to every thing */
 	emulator->cpu->P = 0;
-	emulator->cpu->sn_IFlag = 0;
 	emulator->cpu->PB = 0;
 	emulator->cpu->DBR = 0;
+	emulator->cpu->SP = 0;
 	emulator->cpu->cycles = 0;
 	emulator->cpu->fetch = fetchCPU;
 
 	printf("cpu_setup: done\n");
 	emulator->cpu->PC = &emulator->memory->bank_array[emulator->cpu->PB][rom_Ptr->resetV - 0x8000];
-	printf("cpu_setup: starting at %X %X \n", emulator->memory->bank_array[emulator->cpu->DBR][0], emulator->cpu->PC);
+	printf("cpu_setup: starting at %X %X \n", emulator->memory->bank_array[emulator->cpu->PB][0], emulator->cpu->PC);
 }

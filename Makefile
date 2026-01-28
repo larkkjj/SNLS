@@ -2,8 +2,8 @@ binary		:= SNLS.ELF
 ps2		?= 0
 window		?= 1
 debug		?= 0
-flags		:= -g -DDEBUG=0 --std=c23
-libraries	:= -lm -Llibs -lraylib
+flags		:= -g --std=c23 -DDEBUG=0 -D_GNU_SOURCE -Wstringop-overflow=0
+libraries	:= -lm -lc -Llibs -lraylib 
 includes	:= -Iinclude/raylib -Iinclude -I. -Iinclude/general
 
 ifeq ($(ps2), 1)
