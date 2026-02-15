@@ -5,6 +5,7 @@
 
 #include "general/references.h"
 #include "general/functions.h"
+#include "emulator/memory.h"
 #include "emulator/main.h"
 #include "core/apu.h"
 #include "core/bus.h"
@@ -71,21 +72,21 @@ static void generic(snSPC* spc) {
 };
 
 static void snSPC_BRA(snSPC* spc) {
-	spc->bus->readU8const(spcBUS_ptr, 0x00);
-	spc->PC++;
+	spc->bus->readU8const(spc, 0x00);
+	spc->PC += (s8) spc->bus->address + 1;
 };
 
 static void snSPC_BEQ(snSPC* spc) {
-	spc->bus->readU8const(spcBUS_ptr, 0x00);
+	spc->bus->readU8const(spc, 0x00);
 	if (spc->PSW & 0x2) {
-		spc->PC += (s8) spc->bus->value + 1;
+		spc->PC += (s8) spc->bus->address + 1;
 	} else {
 		++spc->PC;
 	}
 };
 
 static void snSPC_BNE(snSPC* spc) {
-	spc->bus->readU8const(spcBUS_ptr, 0x00);
+	spc->bus->readU8const(spc, 0x00);
 	/* i kinda prefer this syntax, howewer it's not that readable */
 	spc->PC += (!(spc->PSW & 0x2)) \
 				  ? (s8) spc->bus->value + 1 : 1;
@@ -113,7 +114,7 @@ static void snSPC_CLRC(snSPC* spc) {
 
 
 static void snSPC_SETP(snSPC* spc) {
-	spc->PSW |= 0x1; 
+	spc->PSW |= 0x1;
 	if (!(spc->PSW & SPC_P_FLAG)) {
 		spc->DP = 0x0;
 	};
@@ -164,28 +165,28 @@ static void snSPC_MOV_A_x(snSPC* spc) {};
 static void snSPC_MOV_A_xplus(snSPC* spc) {};
 
 static void snSPC_MOV_A_dp(snSPC* spc) {
-	spc->bus->readU16absoluteIndirect(spc->bus, 0x02);
+	spc->bus->readU16absoluteIndirect(spc, 0x02);
 	spc->A = spc->bus->value;
 };
 
 static void snSPC_MOV_A_DP_X(snSPC* spc) {};
 
 static void snSPC_MOV_A_abs(snSPC* spc) {
-	spc->bus->readU16absolute(spc->bus, 0x00);
+	spc->bus->readU16absolute(spc, 0x00);
 	spc->PC++;
 };
 
 static void snSPC_MOV_A_abs_X(snSPC* spc) {
-	spc->bus->readU16absolute(spc->bus, spc->X);
+	spc->bus->readU16absolute(spc, spc->X);
 	spc->PC++;
 };
 
 static void snSPC_MOV_A_abs_Y(snSPC* spc) {
-	spc->bus->readU16absolute(spc->bus, spc->Y);
+	spc->bus->readU16absolute(spc, spc->Y);
 };
 
 static void snSPC_MOV_Xindr_A(snSPC* spc) {
-	spc->bus->writeIndirect(spc->bus, 0x00, spc->A, 0x03);
+	spc->bus->writeIndirect(spc, 0x00, spc->A, 0x03);
 	spc->PC++;
 };
 
@@ -246,8 +247,8 @@ static void snSPC_MOV_dp_dp(snSPC* spc) {
 };
 
 static void snSPC_MOV_DP_const(snSPC* spc) {
-	spc->bus->readU8const(spc->bus, 0x00);
-	spc->bus->writeIndirect(spc->bus, 0x00, spc->bus->value, 0x05);
+	spc->bus->readU8const(spc, 0x00);
+	spc->bus->writeIndirect(spc, 0x00, hAddr, 0x05);
 	spc->PC++;
 	sleep(1);
 };
@@ -280,6 +281,7 @@ static void fetchSPC(snSPC* spc) {
 }
 
 extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer) {
+	printf("spc_setup: init\n");
 	spcBUS_ptr = malloc(sizeof(spcBUS));
 
 	/* APU != SPC
@@ -287,7 +289,6 @@ extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer) {
 	 * APU is the communicate interface
 	 * DSL produces AUDIO */
 	setupIPL(spc_ptr, 0x00);
-	setupSPCBUS(emulator, spcBUS_ptr);
 
 	emulator->apu->spc = spc_ptr;
 	spc_ptr->bus = spcBUS_ptr;
@@ -300,6 +301,8 @@ extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer) {
 	spc_ptr->Y = 0x00;
 	spc_ptr->DP = 0x0000;
 	spc_ptr->PSW = 0x0;
+
+	setupSPCBUS(spc_ptr, spcBUS_ptr);
 
 	buffer[0x00] = &spc_ptr->internalRAM[0xF4];
 	buffer[0x01] = &spc_ptr->internalRAM[0xF5];
@@ -333,5 +336,7 @@ extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer) {
 	spc_ptr->opcode[0x40] = snSPC_SETP;
 	spc_ptr->opcode[0x80] = snSPC_SETC;
 
+	printf("spc_setup: done\n");
+	usleep(1000);
 	return;
 };

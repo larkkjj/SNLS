@@ -44,6 +44,9 @@ extern void setupDMA(emGeneral* emulator, u8** buffer) {
 
 	emulator->dma->MdMaen = 0;
 	emulator->dma->HdMaen = 0;
+
+	printf("dma_setup: done\n");
+	usleep(1000);
 	return;
 };
 

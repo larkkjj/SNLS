@@ -31,9 +31,11 @@ extern void setupPPU(emGeneral* emulator, u8** buffer) {
 	buffer[0x0A] = &emulator->ppu->Bg4SC;
 	buffer[0x0B] = &emulator->ppu->Bg12NBA;
 	buffer[0x0C] = &emulator->ppu->Bg34NBA;
-	buffer[0x0D] = &emulator->ppu->Bg1HOFS;
+	buffer[0x0D] = &emulator->ppu->hScroll.pointer;
+	buffer[0x0E] = &emulator->ppu->vScroll.pointer;
+	// buffer[0x0D] = &emulator->ppu->Bg1HOFS;
 	//buffer[0x0D] = &emulator->ppu->M7HOFS;
-	buffer[0x0E] = &emulator->ppu->Bg1VOFS;
+	// buffer[0x0E] = &emulator->ppu->Bg1VOFS;
 	//buffer[0x0E] = &emulator->ppu->M7VOFS;
 	buffer[0x0F] = &emulator->ppu->Bg2HOFS;
 	buffer[0x10] = &emulator->ppu->Bg2VOFS;
@@ -48,5 +50,7 @@ extern void setupPPU(emGeneral* emulator, u8** buffer) {
 	buffer[0x23] = &emulator->ppu->cgDataRead;
 
 	emulator->ppu->fetch = fetchPPU;
+	printf("ppu_setup: done\n");
+	usleep(1000);
 	return;
 }

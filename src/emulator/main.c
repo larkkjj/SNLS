@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
 	 * but this is used until
 	 * i make a file explorer */
 	//openRom("roms/cputest/cputest-full.sfc", &rom_Ptr);
-	openRom("roms/mariow.sfc", &rom_Ptr);
+	openRom("roms/mariow.smc", &rom_Ptr);
 
 	initEmu(&rom_Ptr);
 

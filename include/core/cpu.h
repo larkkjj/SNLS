@@ -4,42 +4,45 @@
 #include <stdbool.h>
 #include "general/types.h"
 #include "general/references.h"
+#include "emulator/memory.h"
+#include "core/stack.h"
 
 /*ですただ */
 typedef struct snCPU {
-	u8*		PC;
-	u8*		subPC;	/* Subroutine */
+	u8*				PC;
+	u8*				subPC;	/* Subroutine */
 
-	u16		SP;
-	u16		A;
-	u16		X;
-	u16		Y;
-	u16		DP;
-	u8		DBR;
-	u8		PB;
-	u16		P;
+	u16				SP;
+	u16				A;
+	u16				X;
+	u16				Y;
+	u16				DP;
+	u8	   		DBR;
+	u8		   	PB;
+	u16				P;
 
-	u8		flags;
-	void		(*fetch)(emGeneral* emulator);
+	union {
+		struct {
+			bool	Negative: 1;
+			bool	Overflow: 1;
+			bool	Accumulator: 1;
+			bool	Index: 1;
+			bool	Decimal: 1;
+			bool	Interrupt: 1;
+			bool	Zero: 1;
+			bool	Carry: 1;
+			bool	Emulation: 1;
+			bool	Break: 1;
+		};
+		bool	value;
+	} flags;
 
-	/* in the future, i want
-	 * to implement an idea
-	 * that i had in the project
-	 * s starting phase,
-	 * a single u8 value
-	 * acting all the sn_Flags
-	 * like the OG hardware */
-	bool 		sn_NFlag;
-	bool 		sn_VFlag;
-	bool 		sn_MFlag;
-	bool 		sn_XFlag;
-	bool 		sn_DFlag;
-	bool 		sn_IFlag;
-	bool 		sn_ZFlag;
-	bool 		sn_CFlag;
-	bool 		sn_EFlag;
-	bool 		sn_BFlag;
-
+  cpuStack 			stack;
+	cpuBUS*				bus;
+	addrResolver*	resolver;
+	emMemory*			memory;
+	memoryHolder	holder;
+	void					(*fetch)(snCPU* cpu);
 } snCPU;
 
 typedef enum {

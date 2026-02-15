@@ -1,40 +1,34 @@
 #ifndef SNLS_BUS_HEADER
 #define SNLS_BUS_HEADER
 
+#include <stdbool.h>
 #include "general/types.h" 
 #include "general/references.h"
-#include "core/cpu.h"
 #include "emulator/memory.h"
 
-typedef struct snesBUS {
-	u8		bank;
-	u16		value;
-	u16		address;
+#define ADDRESS_CONST_8			0x1
+#define ADDRESS_CONST_16		0x2
+#define ADDRESS_RELATIVE_8	0x3
+#define ADDRESS_RELATIVE_16	0x4
+#define ADDRESS_ABSOLUTE_8	0x5
+#define ADDRESS_ABSOLUTE_16	0x6
+#define ADDRESS_ABSOLUTE_24	0x7
+// #define ADDRESS_DP_8				0x8  not used
+// #define ADDRESS_DP_16				0x9 not used
+#define ADDRESS_DP					0x8
+#define ADDRESS_DP_24				0x9
+
+typedef struct cpuBUS {
+	__attribute__	((access(read_only, 1)))
+	void		(*read)(snCPU* cpu, char mode, bool indirect, u16 offset);
 
 	__attribute__	((access(read_only, 1)))
-	void		(*readU8const)(snesBUS* busParent, u16 offset);
+	void		(*write)(snCPU* cpu, u16 value);
 
-	__attribute__	((access(read_only, 1)))
-	void		(*readU16const)(snesBUS* busParent);
-
-	__attribute__	((access(read_only, 1)))
-	void		(*readU16absolute)(snesBUS* busParent, u16 offset);
-
-	__attribute__	((access(read_only, 1)))
-	void		(*readU16absoluteIndirect)(snesBUS* busParent, u16 offset, u8 mode);
-
-	__attribute__	((access(read_only, 1)))
-	void		(*readU24absolute)(snesBUS* busParent, u16 offset);
-	
-	__attribute__	((access(read_only, 1)))
-	void		(*write)(snesBUS* busParent, u16 value);
-
-	__attribute__	((access(read_only, 1)))
-	void		(*writeIndirect)(snesBUS* busParent, u16 value, u8 mode);
-
-	emGeneral*	emulator;
-	u8*		pointer;
-} snesBUS;
+	emMemory*			memory;
+	memoryHolder*	holder;
+	addrResolver*	resolver;
+} cpuBUS;
 
 typedef struct spcBUS {
 	u8*		pointer;
@@ -42,23 +36,24 @@ typedef struct spcBUS {
 	u16		address;
 
 	__attribute__	((access(read_only, 1)))
-	void		(*readU8const)(spcBUS* busParent, u16 offset);
+	void		(*readU8const)(snSPC* spc, u16 offset);
 
 	__attribute__	((access(read_only, 1)))
-	void		(*readU16const)(spcBUS* busParent);
+	void		(*readU16const)(snSPC* spc);
 
 	__attribute__	((access(read_only, 1)))
-	void		(*readU16absolute)(spcBUS* busParent, u16 offset);
+	void		(*readU16absolute)(snSPC* spc, u16 offset);
 
 	__attribute__	((access(read_only, 1)))
-	void		(*readU16absoluteIndirect)(spcBUS* busParent, u8 mode);
+	void		(*readU16absoluteIndirect)(snSPC* spc, u8 mode);
 
 	__attribute__	((access(read_only, 1)))
-	void		(*write)(spcBUS* busParent, u16 value);
+	void		(*write)(snSPC* spc, u16 value);
 
 	__attribute__	((access(read_only, 1)))
-	void		(*writeIndirect)(spcBUS* busParent, u16 offset, u16 value, u8 mode);
+	void		(*writeIndirect)(snSPC* spc, u16 offset, u16 value, u8 mode);
 	emGeneral*	emulator;
+	addrResolver	resolver;
 } spcBUS;
 
 #endif

@@ -13,7 +13,7 @@ typedef struct emGeneral {
 	snPPU*		ppu;
 	snAPU*		apu;
 	snDMA*		dma;
-	snesBUS*	bus;
+	cpuBUS*		bus;
 	emMemory*	memory;
 	u8*		active;
 

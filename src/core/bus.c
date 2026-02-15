@@ -15,37 +15,114 @@
  * more exausting, but not so hard, just need different(not so..)
  * management */
 
-static void writeSNES(snesBUS* busParent, u16 value) {
-	printf("bus_write: writing %X to [%X][%X] %p \n", value, busParent->bank, busParent->address, busParent->pointer);
-	*busParent->pointer = value;
-};
-
-static void writeSNESindirect(snesBUS* busParent, u16 value, u8 mode) {
-	printf("bus_write: not implemented... \n");
+static void busReadCPU(snCPU* cpu, char mode, bool indirect, u16 offset) {
 	switch (mode) {
-	
-		/* 0x00 -> PC */
-		/* 0x01 -> AC */
-		/* 0x02 -> DP */
-		/* 0x03 -> X  */
-		/* 0x04 -> Y  */
-		case 0x00:
-
+		case ADDRESS_CONST_8:
+			cpu->holder.value = ((*++cpu->PC) + offset);
 		break;
-		case 0x01:
-
+		case ADDRESS_CONST_16:
+			hLoAddr = (*++cpu->PC);
+			hHiAddr = (*++cpu->PC);
+			hAddr = (hHiAddr << 8 | hLoAddr) + offset;
+			cpu->holder.value = hAddr;
 		break;
-		case 0x02:
-
+		case ADDRESS_RELATIVE_8:
+			cpu->holder.value = (*++cpu->PC);
+			cpu->holder.ptr = (cpu->PC + (s8) cpu->holder.value) + 1;
 		break;
+		case ADDRESS_RELATIVE_16:
+			hLoAddr = (*++cpu->PC);
+			hHiAddr = (*++cpu->PC);
+			hAddr = (hHiAddr << 8 | hLoAddr);
+			cpu->holder.value = hAddr;
+			cpu->holder.ptr = (cpu->PC + (s16) cpu->holder.value) + 1;
+		break;
+		case ADDRESS_ABSOLUTE_8:
+			/* WARNING: in the most of the times this mode will be used
+			with a offset, if not, you will probally get a seg
+			fault */
+			
+			hAddr = (*++cpu->PC) + offset;
+			cpu->resolver->get(cpu->DBR, hAddr);
+			cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+			cpu->holder.value = *cpu->holder.ptr;
+		break;
+		case ADDRESS_ABSOLUTE_16:
+			if (!indirect) {
+				hLoAddr = (*++cpu->PC);
+				hHiAddr = (*++cpu->PC);
+				hAddr = (hHiAddr << 8 | hLoAddr) + offset;
+				cpu->resolver->get(cpu->DBR, hAddr);
+				cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+				cpu->holder.value = *cpu->holder.ptr;
+			} else {
+				printf("bus_error: not implemented\n");
+			}
+		break;
+		case ADDRESS_ABSOLUTE_24:
+			if (!indirect) {
+				hLoAddr = (*++cpu->PC);
+				hHiAddr = (*++cpu->PC);
+				hBank = (*++cpu->PC);
+				hAddr = (hHiAddr << 8 | hLoAddr);
+				cpu->resolver->get(hBank, hAddr);
+				cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+				cpu->holder.value = *cpu->holder.ptr;
+				} else {
+					/* NOTE: i guess only jump opcode uses this mode */
+					
+					hBank = (*++cpu->PC);
+					hAddr = ((*++cpu->PC) << 8) | (*++cpu->PC);
+					cpu->resolver->get(hBank, hAddr); /* Get the real address */
+					hLoAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+					hHiAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr + 1];
+					hBank = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr + 2];
+					cpu->holder.ptr = &cpu->memory->bank_array[hBank][hHiAddr << 8 | hLoAddr];
+					cpu->holder.value = *cpu->holder.ptr;
+				}
+		break;
+		case ADDRESS_DP:
+			if (!indirect) {
+				cpu->holder.ptr = &cpu->memory->bank_array[cpu->DBR][cpu->DP + *++cpu->PC + offset];
+				cpu->holder.value = *cpu->holder.ptr;
+			} else {
+				hLoAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset];
+				hHiAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset + 1];
+				hAddr = hHiAddr << 8 | hLoAddr;
+				cpu->resolver->get(cpu->DBR, hAddr);
 
-		case 0x03:
+				cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+				cpu->holder.value = *cpu->holder.ptr;
+			}
+		break;
+		case ADDRESS_DP_24:
+			if (!indirect) {
+				printf("bus_error: this mode doesnt exist ADDRESS_DP_24\n");
+			} else {
+				hLoAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset];
+				hHiAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset + 1];
+				hBank = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset + 1];
+				hAddr = hHiAddr << 8 | hLoAddr;
+				cpu->resolver->get(hBank, hAddr);
 
+				cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+				cpu->holder.value = *cpu->holder.ptr;
+			}
 		break;
 	}
+	return;
+}
+
+static void busWrite(snCPU* cpu, u8 mode, bool indirect, u16 offset);
+
+static void writeSNES_CPU(snCPU* cpu, u16 value) {
+	printf("bus_write: writing %X to [%X][%X] %p \n", \
+	       value, cpu->resolver->realBank, cpu->resolver->realAddr, cpu->holder.ptr);
+
+	*cpu->holder.ptr = value;
 };
 
-static void writeSNESindirect_SPC(spcBUS* busParent, u16 offset, u16 value, u8 mode) {
+static void writeSNESindirect_SPC(snSPC* spc, u16 offset, u16 value, u8 mode) {
 	switch (mode) {
 		/* 0x00 -> PC */
 		/* 0x01 -> AC */
@@ -64,80 +141,45 @@ static void writeSNESindirect_SPC(spcBUS* busParent, u16 offset, u16 value, u8 m
 
 		break;
 		case 0x03:
-			busParent->address = (busParent->emulator->apu->spc->X) + offset;
+			spc->bus->address = (spc->X) + offset;
 		break;
 		case 0x05:
-			busParent->address = ((*++busParent->emulator->apu->spc->PC) | busParent->emulator->apu->spc->DP) + offset;
+			spc->bus->address = ((*++spc->PC) | spc->DP) + offset;
 		break;
 		case 0x07:
-			busParent->address = (busParent->emulator->apu->spc->DP | busParent->emulator->apu->spc->X) + offset;
+			spc->bus->address = (spc->DP | spc->X) + offset;
 		break;
 		default:
 			printf("spc_bus: unknown mode %X \n");
 			exit(1);
 		break;
 	};
-	busParent->value = value;
-	printf("spc_bus_write_indirect: writing %X to %X \n", busParent->value, busParent->address);
-	busParent->pointer = &busParent->emulator->apu->spc->internalRAM[busParent->address];
-	*busParent->pointer = busParent->value;
+	printf("spc_bus_write_indirect: writing %X to %X \n", value, spc->bus->address);
+	spc->bus->pointer = &spc->internalRAM[spc->bus->address];
+	*spc->bus->pointer = value;
 };
 
 
-static void writeSNES_SPC(spcBUS* busParent, u16 value) {
-	printf("spc_bus_write: writing %X to [%X] \n", value, busParent->address);
-	*busParent->pointer = value;
+static void writeSNES_SPC(snSPC* spc, u16 value) {
+	printf("spc_bus_write: writing %X to [%X] \n", value, spc->bus->address);
+	*spc->bus->pointer = value;
 };
 
-static void readU8const(snesBUS* busParent, u16 offset) {
-	busParent->value = *(++busParent->emulator->cpu->PC + offset);
+static void readU8const_SPC(snSPC* spc, u16 offset) {
+	hAddr = *(++spc->PC + offset);
 };
 
-static void readU8const_SPC(spcBUS* busParent, u16 offset) {
-	busParent->value = *(++busParent->emulator->apu->spc->PC + offset);
-};
+static void readU16absolute_SPC(snSPC* spc, u16 offset) {
 
-static void readU16absolute(snesBUS* busParent, u16 offset) {
-	hLoAddr = *(++busParent->emulator->cpu->PC);
-	hHiAddr = *(++busParent->emulator->cpu->PC);
-	hAddr = (hHiAddr << 8 | hLoAddr) + offset;
-	getMappedBank(busParent->emulator->cpu->DBR, hAddr, busParent->emulator);
-};
-
-static void readU16absoluteIndirect(snesBUS* busParent, u16 offset, u8 mode) {
-	/* kinda specific-use */
-	switch (mode) {
-		case 0x00:
-			hLoAddr = *(++busParent->emulator->cpu->PC);
-			hHiAddr = *(++busParent->emulator->cpu->PC);
-			hAddr = (hHiAddr << 8 | hLoAddr) + offset;
-			printf("%X %X \n", hAddr, hAddr + 1);
-
-
-			getMappedBank(busParent->emulator->cpu->DBR, hAddr, busParent->emulator);
-			hLoByte = busParent->value;
-			getMappedBank(busParent->emulator->cpu->DBR, hAddr + 1, busParent->emulator);
-			hHiByte = busParent->value;
-			busParent->value = (hHiByte << 8 | hLoByte);
-
-			break;
-		default:
-	
-		break;
-	}
-};
-
-static void readU16absolute_SPC(spcBUS* busParent, u16 offset) {
-
-	hLoAddr = *(++busParent->emulator->cpu->PC);
-	hHiAddr = *(++busParent->emulator->cpu->PC);
+	hLoAddr = *(++spc->PC);
+	hHiAddr = *(++spc->PC);
 	hAddr = (hHiAddr << 8 | hLoAddr) + offset;
 	printf("bus_spc: WARNING, code notimplemented due to SPC RAM implementation \n");
 	printf("bus_spc: add it in the get Mapped Bank function \n");
 
 };
 
-static void readU16absoluteIndirect_SPC(spcBUS* busParent, u8 mode) {
+static void readU16absoluteIndirect_SPC(snSPC* spc, u8 mode) {
 
 	/* 0x00 -> PC */
 	/* 0x01 -> AC */
@@ -149,7 +191,7 @@ static void readU16absoluteIndirect_SPC(spcBUS* busParent, u8 mode) {
 
 	switch (mode) {
 		case 0x02:
-			busParent->value = busParent->emulator->apu->spc->internalRAM[busParent->emulator->apu->spc->DP];
+			spc->bus->value = spc->internalRAM[spc->DP];
 		break;
 		default:
 
@@ -158,61 +200,37 @@ static void readU16absoluteIndirect_SPC(spcBUS* busParent, u8 mode) {
 
 };
 
-static void readU16const(snesBUS* busParent) {
-	hLoAddr = *(++busParent->emulator->cpu->PC);
-	hHiAddr = *(++busParent->emulator->cpu->PC);
-	hAddr = (hHiAddr << 8 | hLoAddr); 
-	busParent->value = hAddr;
-	printf("bus_read: returning const address %X \n", busParent->value);
-};
-
-static void readU16const_SPC(spcBUS* busParent) {
-	hLoAddr = *(++busParent->emulator->apu->spc->PC);
-	hHiAddr = *(++busParent->emulator->apu->spc->PC);
+static void readU16const_SPC(snSPC* spc) {
+	hLoAddr = *(++spc->PC);
+	hHiAddr = *(++spc->PC);
 	hAddr = hHiAddr << 8 | hLoAddr;
-	busParent->value = hAddr;
+	spc->bus->value = hAddr;
 }
 
-static void readU24absolute(snesBUS* busParent, u16 offset) {
-	hLoAddr = *(++busParent->emulator->cpu->PC);
-	hHiAddr = *(++busParent->emulator->cpu->PC);
-	hAddr = (hHiAddr << 8 | hLoAddr) + offset;
-	hBank = *(++busParent->emulator->cpu->PC);
-	printf("bus_read: got [0x%02X][%X]\n", hBank, hAddr);
-	getMappedBank(hBank, hAddr, busParent->emulator);
-	printf("bus_read: returning [0x%02X][%X]\n", busParent->bank, busParent->address);
-};
-
-extern void setupSPCBUS(emGeneral* emulator, spcBUS* busParent) {
-	//emulator->apu->spc->bus = busParent;
+extern void setupSPCBUS(snSPC* spc, spcBUS* bus) {
+	//emulator->apu->spc->bus = cpu;
 	/* We just make a callback to emulatorPtr
 	 * So we can still acess something from out */
-	busParent->emulator = emulator;
-	busParent->address = 0x0000;
-	busParent->value = 0x0000;
-	busParent->pointer = NULL;
+	spc->bus->address = 0x0000;
+	spc->bus->value = 0xFFFF;
+	spc->bus->pointer = NULL;
 
-	busParent->readU8const = readU8const_SPC;
-	busParent->readU16const = readU16const_SPC;
-	busParent->readU16absolute = readU16absolute_SPC;
-	busParent->readU16absoluteIndirect = readU16absoluteIndirect_SPC;
-	busParent->write = writeSNES_SPC;
-	busParent->writeIndirect = writeSNESindirect_SPC;
+	bus->readU8const = readU8const_SPC;
+	bus->readU16const = readU16const_SPC;
+	bus->readU16absolute = readU16absolute_SPC;
+	bus->readU16absoluteIndirect = readU16absoluteIndirect_SPC;
+	bus->write = writeSNES_SPC;
+	bus->writeIndirect = writeSNESindirect_SPC;
 }
 
-extern void setupOpenBUS(emGeneral* emulator, snesBUS* busParent) {
-	emulator->bus = busParent;
-	busParent->emulator = emulator;
-	busParent->address = 0x0000;
-	busParent->bank = 0x00;
-	busParent->pointer = NULL;
+extern void setupCPUBUS(snCPU* cpu, cpuBUS* bus) {
+	cpu->bus = bus;
+	cpu->resolver->realAddr = 0x0000;
+	cpu->resolver->realBank = 0x00;
+	cpu->resolver->addrPtr = NULL;
 
-	busParent->readU8const = readU8const;
-	busParent->readU16absolute = readU16absolute;
-	busParent->readU16absoluteIndirect = readU16absoluteIndirect;
-	busParent->readU16const = readU16const;
-	busParent->readU24absolute = readU24absolute;
-	busParent->write = writeSNES;
-	busParent->writeIndirect = writeSNESindirect;
+	bus->memory = cpu->memory;
+	bus->holder = &cpu->holder;
+	bus->read = busReadCPU;
+	bus->write = writeSNES_CPU;
 }
-

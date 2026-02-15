@@ -1,10 +1,10 @@
 binary		:= SNLS.ELF
-ps2		?= 0
+ps2			?= 0
 window		?= 1
-debug		?= 0
-flags		:= -g --std=c23 -DDEBUG=0 -D_GNU_SOURCE -Wstringop-overflow=0
-libraries	:= -lm -lc -Llibs -lraylib 
-includes	:= -Iinclude/raylib -Iinclude -I. -Iinclude/general
+debug			?= 0
+flags			:= -g --std=c23 -DDEBUG=0 -D_GNU_SOURCE -Wstringop-overflow=0
+libraries	:= -lm -lc
+includes		:= -Iinclude -I. -Iinclude/general
 
 ifeq ($(ps2), 1)
 	source		+= src/platform/ps2
@@ -22,9 +22,9 @@ ifeq ($(ps2), 1)
 
 	linkfile	:= -T$(PS2SDK)/ee/startup/linkfile
 else
-	libraries	+= $(shell pkg-config --cflags --libs freetype2 sdl2 libpng)
+	libraries	+= $(shell pkg-config --cflags --libs raylib freetype2 libpng)
 
-	includes    	+= $(shell pkg-config --cflags freetype2 sdl2 libpng)
+	includes    	+= $(shell pkg-config --cflags freetype2 libpng)
 
 	source		+= src/platform/pc
 	prefix		:=
@@ -42,11 +42,12 @@ compiler	:= $(prefix)gcc
 compiler_g++	:= $(prefix)g++
 
 source		+= src \
-		   src/core \
-		   src/platform/cross \
-		   src/emulator \
-		   src/emulator/main \
-		   src/tools
+					src/core \
+					src/platform/cross \
+					src/emulator \
+					src/emulator/main \
+					src/tools \
+					src/dynarec
 
 c_source 	+= $(foreach c_src, $(source), $(wildcard $(c_src)/*.c))
 #c_source	+= $(foreach c_src, $(source), $(wildcard $(c_src)/*.cpp))
@@ -59,7 +60,15 @@ d_files		+= $(patsubst %.c,bin/%.d,$(c_source))
 # objects		:= $(c_objects)
 
 
-all: $(binary)
+all: check $(binary)
+ 
+check:
+	@if pkg-config freetype2 raylib libpng; then \
+		continue; \
+	else \
+		echo "Error, some package wasn't found"; \
+		exit 1; \
+	fi
 
 $(binary): $(c_objects)
 	@echo -e '\n\t Linking to $@...\n'

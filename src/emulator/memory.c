@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <malloc.h>
 
@@ -7,14 +8,9 @@
 #include "core/dma.h"
 #include "core/apu.h"
 #include "core/bus.h"
+#include "emulator/rom.h"
 #include "emulator/main.h"
 #include "emulator/memory.h"
-
-/*u8* memory_vMap = NULL;
-u8* memory_wRAM = NULL;
-u8* memory_sPPU = NULL;
-u8* memory_iCPU = NULL;
-u8* memory_rDMA = NULL;*/
 
 u8 hBank = 0x00;
 u16 hAddr = 0x0000;
@@ -22,6 +18,8 @@ u16 hLoAddr = 0x0000;
 u16 hHiAddr = 0x0000;
 u8 hLoByte;
 u8 hHiByte;
+
+static addrResolver resolver;
 
 /* TODO: Make a new function unifying PPU, APU
  * DMA, and buffer setup, something like this
@@ -34,13 +32,15 @@ extern void attachROM(u8* buffer) {
 	return;
 };
 
-extern inline void getMappedBank(u8 index, u16 address, emGeneral* emulator) {
-	u8 tAddr;
+static inline void resolveAddr(u8 index, u16 address) {
+	u16 tAddr;
 	u8 tBank;
+
+	printf("got address [%X]:[%X]\n", index, address);
 	if (index >= 0x00 && index <= 0x3F) {
 		if (address <= 0x200) {
 			tAddr = address - 0x8000;
-			tBank = emulator->memory->bank_count + 3;	
+			tBank = bankCount + 3;	
 		} else if (address >= 0x8000) {
 			/* goes to rom*/
 			tAddr = address - 0x8000;
@@ -48,59 +48,40 @@ extern inline void getMappedBank(u8 index, u16 address, emGeneral* emulator) {
 		} else if (address >= 0x2100 && address <= 0x213F){
 			/* falls back to ppu! */
 			tAddr = address - 0x2100;
-			tBank = emulator->ppu->located;
+			tBank = resolver.indexer->ppu;
 		} else if (address >= 0x2140 && address <= 0x2143) {
 			/* falls back to apu! */
 			tAddr = address - 0x2140;
-			tBank = emulator->apu->located;
+			tBank = resolver.indexer->apu;
 		} else if (address == 0x4200 || address == 0x4201) {
 			tAddr = address - 0x4200;
-			tBank = emulator->memory->bank_count + 3;
+			tBank = bankCount + 3;
 			printf("we're supposed to got joypad registers, but not implemented yet\n");
 		} else if (address == 0x420B || address == 0x420C) {
 			tAddr = address - 0x420B;
-			tBank = emulator->dma->located;
+			tBank = resolver.indexer->dma;
 		}
 	} else if (index == 0x7E) {
-		tAddr = address;
-		tBank = emulator->memory->bank_count + 3;
+	 	tAddr = address;
+		tBank = resolver.indexer->vramL;
 	} else if (index == 0x7F) {
 		tAddr = address;
-		tBank = emulator->memory->bank_count + 4;
+		tBank = resolver.indexer->vramH;
 	}
-	printf("get_mapped_bank: bank: %X address: %X \n", index, address);
-	emulator->bus->address = tAddr;
-	emulator->bus->bank = tBank;
-	emulator->bus->pointer = &emulator->memory->bank_array[tBank][tAddr];
-	emulator->bus->value = *emulator->bus->pointer; 
+	resolver.realAddr = tAddr;
+	resolver.realBank = tBank;
+	printf("resolve: bank: %X address: %X \n", resolver.realBank, resolver.realAddr);
 	return;
 };
 
-extern void assignToMap(u8** dest, u8** src, unsigned int offset, unsigned int count, unsigned int type) {
-	/* don't misunderstand with a memcpy alternative
-	 * this references a map to another one */
-	/* double is used here 'cause of rom buffer that uses
-	 * a single pointer */
+extern void setupResolver(indexer* index, snCPU* cpu) {
+	resolver.get = resolveAddr;
+	resolver.indexer = index;
+	cpu->resolver = &resolver;
+}
 
-	/* source[0x8000]  ->  destination[0x133]
-	 * source[0x8001]  ->  destination[0x134]*/
-	/* 2 = u8 */
+extern void assignToMap(u8** dest, u8** src, unsigned int offset, unsigned int count, unsigned int type) {
 	for(unsigned int i = 0; i < count; i ++) {
 		dest[offset + i] = src[i];
 	};
 }
-
-extern void setupSystem(u8* buffer, snPPU* ppu, snDMA* dma) {
-	/*for(unsigned int i = 0; i < 0xFF; i ++) {
-		mBank[i] = malloc(sizeof(u8));
-	};
-
-	for(unsigned int i = 0; i < rom_Ptr->banks; i ++) {
-		mMemory_ptr[i] = malloc(sizeof(u8));
-		mMemory_ptr[i]->buffer = malloc(0x10000);
-		//attachROM(mMemory_ptr[i]->buffer, rom_Ptr);
-		mapPPU(ePPU, mMemory_ptr[i]->buffer);
-
-		mBank[i] = *mMemory_ptr[i]->buffer;
-	}*/
-};

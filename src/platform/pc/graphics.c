@@ -9,16 +9,16 @@
 #include "emulator/main.h"
 #include "core/bus.h"
 
-char SNES_X[0x04];
-char SNES_A[0x04];
-char SNES_Y[0x04];
-char CPU_EFlag[1] = {};
-char CPU_MFlag[1] = {};
-char CPU_PC[0x4F]; 
-char RAM_LOW[1] = {};
-char BUS_ADDRESS[0xF];
-char BUS_BANK[0xF];
-char BUS_VALUE[0xF]; 
+static char SNES_X[0x04];
+static char SNES_A[0x04];
+static char SNES_Y[0x04];
+static char CPU_EFlag[1] = {};
+static char CPU_MFlag[1] = {};
+static char CPU_PC[0x4F]; 
+static char RAM_LOW[1] = {};
+static char BUS_ADDRESS[0xF];
+static char BUS_BANK[0xF];
+static char BUS_VALUE[0xF]; 
 
 static char APU_A[0xF] = {};
 static char APU_X[0xF] = {};

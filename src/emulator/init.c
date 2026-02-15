@@ -21,10 +21,14 @@ snPPU* ePPU = NULL;
 snDMA* eDMA = NULL;
 snAPU* eAPU = NULL;
 snRAM* eRAM = NULL;
-snesBUS* eBUS = NULL;
 
+cpuBUS* cBUS = NULL;
+
+static indexer index;
 static emGeneral general;
 static emMemory memory;
+
+u8 bankCount = 0;
 
 typedef struct snesSync {
 	u8	counter;
@@ -55,7 +59,7 @@ void mainFetch(emGeneral* emulator) {
 		#endif
 		if (sync.order[sync.counter] & 0x01) {
 			printf("sync_counter: fetching cpu...\n");
-			emulator->cpu->fetch(emulator);
+			emulator->cpu->fetch(emulator->cpu);
 		}
 		if (sync.order[sync.counter] & 0x02) {
 			printf("sync_counter: fetching ppu...\n");
@@ -78,14 +82,14 @@ void mainFetch(emGeneral* emulator) {
 	}
 }
 
-extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]) {
+static void mapPtrBank(emGeneral* emulator, unsigned int count, u8* bank_array[]) {
 	/* this is loROM only */
 	/* target, make 17 pointers, assuming the rom
 	 * have 16 banks, so that would be
 	 * 32KB * 16 + 32KB => 544KB*/
-	emROM rom[index];
+	emROM rom[count];
 	/* this is where our fun beggins */
-	for(unsigned int i = 0; i < index; i ++) {
+	for(unsigned int i = 0; i < count; i ++) {
 		bank_array[i] = malloc(0x8000);
 		rom[i].buffer = malloc(0x8000);
 		fread(rom[i].buffer, sizeof(u8), 0x8000, rom_File);
@@ -93,45 +97,38 @@ extern void mapPtrBank(emGeneral* emulator, unsigned int index, u8* bank_array[]
 		free(rom[i].buffer);
 	}
 
-	general.memory->bank_count = index;
+	bankCount = count;
 	general.memory->pointerTarget = malloc(sizeof(u8*));
 	
-	setupOpenBUS(emulator, eBUS); /* our open-bus */
 
 	general.ppu = ePPU;
-	general.ppu->located = index;
-	setupPPU(emulator, &bank_array[general.ppu->located]);
+	index.ppu = count;
+	setupPPU(emulator, &bank_array[index.ppu]);
 
 	general.apu = eAPU;
-	general.apu->located = index + 1;
-	setupSPC(emulator, eSPC, &bank_array[general.apu->located]);
+	index.apu = count + 1;
+	setupSPC(emulator, eSPC, &bank_array[index.apu]);
 
 	general.dma = eDMA;
-	general.dma->located = index + 2;
-	setupDMA(emulator, &bank_array[general.dma->located]);
+	index.dma = count + 2;
+	setupDMA(emulator, &bank_array[index.dma]);
 
 	general.ram = eRAM;
-	bank_array[index + 3] = general.ram->wRAM_lo;
-	bank_array[index + 4] = general.ram->wRAM_hi;
+	index.vramL = count + 3;
+	index.vramH = count + 4;
+	bank_array[index.vramL] = general.ram->wRAM_lo;
+	bank_array[index.vramH] = general.ram->wRAM_hi;
 
 
 	/* doing this for my own crazy sanity
 	 * TODO: DUDE IT'S BEEN 1 WEEK WTF IS WRONG */
-	printf("%p %p \n", bank_array[index + 3], general.ram->wRAM_lo);
-	printf("%p %p \n", bank_array[index + 4], general.ram->wRAM_hi);
+	printf("%p %p \n", bank_array[index.vramL], general.ram->wRAM_lo);
+	printf("%p %p \n", bank_array[index.vramH], general.ram->wRAM_hi);
 	/* NOT TODO: YEA I SOLVED IT, I'M CRAZY HAHAHAHA */
 }
 
 extern void initEmu(rom* rom_Ptr) {
-	/*TODO: move all this to memory.c, where they belong*/
-/*	for(unsigned int i = 0; i < 0x8000; i ++) {
-		eRAM->wRAM_exp1[i] = calloc(1, sizeof(u8*));
-		eRAM->wRAM_exp2[i] = calloc(1, sizeof(u8*));
-	}
-*/
-
-
-	eBUS = malloc(sizeof(snesBUS));
+	cBUS = malloc(sizeof(cpuBUS));
 	ePPU = malloc(sizeof(snPPU));
 	eDMA = malloc(sizeof(snDMA));
 	eAPU = malloc(sizeof(snAPU));
@@ -142,6 +139,8 @@ extern void initEmu(rom* rom_Ptr) {
 	eRAM->wRAM_lo = malloc(0x10000);
 	eRAM->wRAM_hi = malloc(0x10000);
 	general.memory = &memory;
+
+	printf("resources allocated \n");
 	mapPtrBank(&general, rom_Ptr->banks, memory.bank_array);
 	fclose(rom_File);
 
@@ -152,6 +151,9 @@ extern void initEmu(rom* rom_Ptr) {
 	/* basic setup */
 	general.cpu = eCPU;
 	setupCPU(&general, rom_Ptr);
+	setupResolver(&index, eCPU);
+	setupCPUstack(&general.cpu->stack);
+	setupCPUBUS(general.cpu, cBUS); /* our open-bus */
 	
 	mainFetch(&general);
 

@@ -3,15 +3,16 @@
 
 #include "general/references.h"
 #include "general/types.h"
+#include "core/stack.h"
 
-#define SPC_N_FLAG 	(0x1 << 7)
-#define SPC_V_FLAG 	(0x1 << 6)
-#define SPC_P_FLAG 	(0x1 << 5)
-#define SPC_B_FLAG 	(0x1 << 4)
-#define SPC_H_FLAG 	(0x1 << 3)
-#define SPC_I_FLAG 	(0x1 << 2)
-#define SPC_Z_FLAG 	(0x1 << 1)
-#define SPC_C_FLAG 	(0x1)
+#define SPC_N_FLAG 	(0x80)
+#define SPC_V_FLAG 	(0x40)
+#define SPC_P_FLAG 	(0x20)
+#define SPC_B_FLAG 	(0x10)
+#define SPC_H_FLAG 	(0x08)
+#define SPC_I_FLAG 	(0x04)
+#define SPC_Z_FLAG 	(0x02)
+#define SPC_C_FLAG 	(0x01)
 
 static u8 IPL_NTSC[0x40] = {
 	0xCD, 0xEF, /* load 0xEF */
@@ -74,6 +75,7 @@ typedef struct snSPC {
 	u8		PSW; /* Same as CPU flags or PSW if you prefer */
 
 	u8		internalRAM[0xFFFF];
+	spcStack   stack;
 	spcBUS*		bus; /* yes, an independent bus
 
 				i love you SPC-700   */
