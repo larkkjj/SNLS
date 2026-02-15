@@ -18,12 +18,20 @@
 #define ADDRESS_DP					0x8
 #define ADDRESS_DP_24				0x9
 
+
+#define BUS_WRITE_16 0x0
+#define BUS_WRITE_8  0x1
+
+
 typedef struct cpuBUS {
 	__attribute__	((access(read_only, 1)))
 	void		(*read)(snCPU* cpu, char mode, bool indirect, u16 offset);
 
 	__attribute__	((access(read_only, 1)))
 	void		(*write)(snCPU* cpu, u16 value);
+
+	__attribute__	((access(read_only, 1)))
+	void		(*write_test)(snCPU* cpu, char mode, u16 value, u16 offset);
 
 	emMemory*			memory;
 	memoryHolder*	holder;

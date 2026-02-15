@@ -95,15 +95,16 @@ static void sn_OpCMP_const(snCPU* cpu) {
 
 static void sn_OpCMP_addr(snCPU* cpu) {
 	if (!cpu->flags.Accumulator) {
-		cpu->bus->read(cpu, ADDRESS_ABSOLUTE_16, true, 0x00);
+		cpu->bus->read(cpu, ADDRESS_ABSOLUTE_16, false, 0x00);
 	} else {
-		cpu->bus->read(cpu, ADDRESS_ABSOLUTE_8, true, 0x00);
+		cpu->bus->read(cpu, ADDRESS_ABSOLUTE_8, false, 0x00);
 	};
 
 	(cpu->flags.Negative = (cpu->A - cpu->holder.value) < 0) ? 1 : 0;
 	(cpu->flags.Zero = (cpu->A - cpu->holder.value) == 0) || (cpu->A == cpu->holder.value) ? 1 : 0;
 	printf("cmp_address: comparing %X with accumulator: %X \n", cpu->holder.value, cpu->A);
 	++cpu->PC;
+	// sleep(1);
 };
 
 static void sn_OpDEA(snCPU* cpu) {
@@ -216,6 +217,21 @@ static void sn_OpJMP_long(snCPU* cpu) {
 	return;
 };
 
+static void sn_OpLDA_const(snCPU* cpu) {
+	if (!cpu->flags.Accumulator) {
+		cpu->bus->read(cpu, ADDRESS_CONST_16, false, 0x00);
+	} else {
+		cpu->bus->read(cpu, ADDRESS_CONST_8, false, 0x00);
+	}
+	cpu->A = cpu->holder.value;
+	cpu->flags.Negative = (s16) cpu->A < 0 ? 1 : 0;
+	cpu->flags.Zero = cpu->A == 0 ? 1 : 0;
+	++cpu->PC;
+	// usleep(10000);
+	return;
+};
+
+
 static void sn_OpLDA_addr(snCPU* cpu) {
 	// cpu->bus->readU16absolute(cpu, 0x00);
 
@@ -227,24 +243,16 @@ static void sn_OpLDA_addr(snCPU* cpu) {
 	return;
 };
 
-static void sn_OpLDA_const(snCPU* cpu) {
-	if (!cpu->flags.Accumulator) {
-		cpu->bus->read(cpu, ADDRESS_CONST_16, false, 0x00);
-	} else {
-		cpu->bus->read(cpu, ADDRESS_CONST_8, false, 0x00);
-	}
-	cpu->A = cpu->holder.value;
-	cpu->flags.Negative = (s16) cpu->A < 0 ? 1 : 0;
-	cpu->flags.Zero = cpu->A == 0 ? 1 : 0;
-	++cpu->PC;
-	usleep(10000);
-	return;
-};
-
 static void sn_OpLDA_DP_indirect_long_Y(snCPU* cpu) {
-	// cpu->bus->readU24absolute(cpu, 0);
-
-	cpu->bus->read(cpu, ADDRESS_ABSOLUTE_24, false, 0x00);
+	cpu->bus->read(cpu, ADDRESS_DP_24, true, 0);
+	if (!cpu->flags.Accumulator) {
+		hLoAddr = *(cpu->holder.ptr + cpu->Y);
+		hHiAddr = *(cpu->holder.ptr + cpu->Y + 1);				
+		cpu->A = (hHiAddr << 8 | hLoAddr);
+	} else {
+		cpu->A = cpu->holder.value + cpu->Y;
+	}
+	cpu->PC++;
 	return;
 };
 
@@ -289,15 +297,27 @@ static void sn_OpLDY_const(snCPU* cpu) {
 	return;
 };
 
+static void sn_OpPHA(snCPU* cpu) {
+	if (cpu->flags.Accumulator) {
+		cpu->stack.push(cpu, CPU_STACK_PUSH16, cpu->A);
+	} else {
+		cpu->stack.push(cpu, CPU_STACK_PUSH8, cpu->A);
+	}
+	cpu->PC++;
+}
+
 static void sn_OpPHP(snCPU* cpu) {
-	cpu->stack.push(cpu, cpu->flags.value);
+	cpu->stack.push(cpu, CPU_STACK_PUSH8, cpu->flags.value);
 	cpu->PC++;
 };
 
 static void sn_OpSTA_addr(snCPU* cpu) {
-	// cpu->bus->readU16absolute(cpu, 0);
 	cpu->bus->read(cpu, ADDRESS_ABSOLUTE_16, false, 0x00);
-	cpu->bus->write(cpu, cpu->A);
+	if (!cpu->flags.Accumulator) {
+		cpu->bus->write_test(cpu, BUS_WRITE_16, cpu->A, 0);
+	} else {	
+		cpu->bus->write_test(cpu, BUS_WRITE_8, cpu->A, 0);
+	}
 	cpu->PC++;
 	return;
 };
@@ -305,27 +325,35 @@ static void sn_OpSTA_addr(snCPU* cpu) {
 static void sn_OpSTA_long(snCPU* cpu) {
 	// cpu->bus->readU24absolute(cpu, 0);
 	cpu->bus->read(cpu, ADDRESS_ABSOLUTE_24, false, 0x00);
-	cpu->bus->write(cpu, cpu->A);
+
+	if (!cpu->flags.Accumulator) {
+		cpu->bus->write_test(cpu, BUS_WRITE_16, cpu->A, 0);
+	} else {
+		cpu->bus->write_test(cpu, BUS_WRITE_8, cpu->A, 0);
+	}
+	sleep(1);
 	cpu->PC++;
 	return;
 };
 
 static void sn_OpSTA_longX(snCPU* cpu) {
-	// cpu->bus->readU24absolute(cpu, cpu->X);
-	cpu->bus->read(cpu, ADDRESS_ABSOLUTE_24, false, cpu->X);
-	cpu->bus->write(cpu, cpu->A);
+	cpu->bus->read(cpu, ADDRESS_ABSOLUTE_24, false, 0x00);
+
+	if (!cpu->flags.Accumulator) {
+		cpu->bus->write_test(cpu, BUS_WRITE_16, cpu->A, cpu->X);
+	} else {
+		cpu->bus->write_test(cpu, BUS_WRITE_8, cpu->A, cpu->X);
+	}
 	cpu->PC++;
 	return;
 };
 
 static void sn_OpSTZ_dp(snCPU* cpu) {
 	////sn_Mwrite(emulator, emulator->cpu->DP, 0, sn_Mread_u8_const(emulator, 0), 0);
-	cpu->PC++;
 	return;
 };
 static void sn_OpSTZ_dpX(snCPU* cpu) {
 	////sn_Mwrite(emulator, sn_Mread_u8_const(emulator, emulator->cpu->DP), emulator->cpu->X, 0);
-	cpu->PC++;
 	return;
 };
 static void sn_OpSTZ_addr(snCPU* cpu) {
@@ -390,11 +418,10 @@ static void sn_OpSBC_addrX(snCPU* cpu) {
 static void sn_OpSBC_const(snCPU* cpu) {
 	if (!cpu->flags.Accumulator) {
 		cpu->bus->read(cpu, ADDRESS_CONST_16, false, 0x00);
-		cpu->A = cpu->A - cpu->holder.value + (!cpu->flags.Carry ? 1 : 0);
 	} else {
 		cpu->bus->read(cpu, ADDRESS_CONST_8, false, 0x00);
-		cpu->A = cpu->A - cpu->holder.value + (!cpu->flags.Carry ? 1 : 0);
 	}
+	cpu->A = cpu->A - cpu->holder.value + (!cpu->flags.Carry ? 1 : 0);
 	cpu->flags.Negative = ((s16) cpu->A < 0 ? 1 : 0);
 	cpu->flags.Zero = (cpu->A == 0 ? 1 : 0);
 	cpu->flags.Overflow = ((cpu->A) > 0xFFFF ? 1 : 0);
@@ -492,7 +519,7 @@ static void fetchCPU(snCPU* cpu) {
 				
 			that's a strange coincidence */
 
-	printf("cpu_fetch: A: %X X: %X Y: %X SP: %X Flags: %b\n", cpu->A, cpu->X,cpu->Y,cpu->SP, cpu->flags);
+	printf("cpu_fetch: A: %X X: %X Y: %X SP: %X Flags: %08b DP: %X\n", cpu->A, cpu->X,cpu->Y,cpu->SP, cpu->flags, cpu->DP);
 	printf("cpu_opcode: %X \n", *cpu->PC);
 	switch (*(cpu->PC)) {
 		case _bit_const:
@@ -567,6 +594,9 @@ static void fetchCPU(snCPU* cpu) {
 		case _lda_const:
 			sn_OpLDA_const(cpu);
 			break;
+		case _lda_dp_indr_l_y:
+			sn_OpLDA_DP_indirect_long_Y(cpu);
+			break;
 		case _ldx_const:
 			sn_OpLDX_const(cpu);
 			break;
@@ -575,6 +605,9 @@ static void fetchCPU(snCPU* cpu) {
 			break;
 		case _ldy_const:
 			sn_OpLDY_const(cpu);
+			break;
+		case _pha:
+			sn_OpPHA(cpu);
 			break;
 		case _php:
 			sn_OpPHP(cpu);
@@ -650,10 +683,15 @@ static void fetchCPU(snCPU* cpu) {
 			       last byte: %02X current byte: %02X next byte: %02X at \n \
 			       address: %X\n", *(cpu->PC - 1), *cpu->PC, *(cpu->PC + 1), cpu->memory->address_target);
 			
+			exit(1);
 			break;
 		default:
+			printf("%X %X %X\n", cpu->memory->bank_array[cpu->resolver->indexer->wramL][0x00],
+				cpu->memory->bank_array[cpu->resolver->indexer->wramL][0x01],
+				cpu->memory->bank_array[cpu->resolver->indexer->wramL][0x02]);
+			
 			printf("cpu_fetch: unknown opcode %X \n",*(cpu->PC));
-			sleep(5);
+			exit(1);
 			break;
 	};
 	printf("%p \n", cpu->PC);

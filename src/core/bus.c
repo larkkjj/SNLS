@@ -16,6 +16,8 @@
  * management */
 
 static void busReadCPU(snCPU* cpu, char mode, bool indirect, u16 offset) {
+	cpu->holder.value = 0;
+	cpu->holder.ptr = NULL;
 	switch (mode) {
 		case ADDRESS_CONST_8:
 			cpu->holder.value = ((*++cpu->PC) + offset);
@@ -48,15 +50,23 @@ static void busReadCPU(snCPU* cpu, char mode, bool indirect, u16 offset) {
 			cpu->holder.value = *cpu->holder.ptr;
 		break;
 		case ADDRESS_ABSOLUTE_16:
+			hLoAddr = (*++cpu->PC);
+			hHiAddr = (*++cpu->PC);
+			hAddr = (hHiAddr << 8 | hLoAddr) + offset;
 			if (!indirect) {
-				hLoAddr = (*++cpu->PC);
-				hHiAddr = (*++cpu->PC);
-				hAddr = (hHiAddr << 8 | hLoAddr) + offset;
 				cpu->resolver->get(cpu->DBR, hAddr);
-				cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
-				cpu->holder.value = *cpu->holder.ptr;
 			} else {
-				printf("bus_error: not implemented\n");
+				cpu->resolver->get(cpu->DBR, hAddr);
+				cpu->resolver->get(cpu->resolver->realBank, cpu->resolver->realAddr);
+			}
+			cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+			if (!cpu->flags.Accumulator) {
+				/* i'm tired of using variables to assign bro */
+				cpu->holder.value = *(cpu->holder.ptr + 1);
+				cpu->holder.value <<= 8;
+				cpu->holder.value |= *(cpu->holder.ptr);
+			} else {
+				cpu->holder.value = *cpu->holder.ptr;
 			}
 		break;
 		case ADDRESS_ABSOLUTE_24:
@@ -70,14 +80,12 @@ static void busReadCPU(snCPU* cpu, char mode, bool indirect, u16 offset) {
 				cpu->holder.value = *cpu->holder.ptr;
 				} else {
 					/* NOTE: i guess only jump opcode uses this mode */
-					
+					hLoAddr = (*++cpu->PC);
+					hHiAddr = (*++cpu->PC);
 					hBank = (*++cpu->PC);
-					hAddr = ((*++cpu->PC) << 8) | (*++cpu->PC);
+					hAddr = (hHiAddr << 8 | hLoAddr);
 					cpu->resolver->get(hBank, hAddr); /* Get the real address */
-					hLoAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
-					hHiAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr + 1];
-					hBank = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr + 2];
-					cpu->holder.ptr = &cpu->memory->bank_array[hBank][hHiAddr << 8 | hLoAddr];
+					cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
 					cpu->holder.value = *cpu->holder.ptr;
 				}
 		break;
@@ -86,11 +94,11 @@ static void busReadCPU(snCPU* cpu, char mode, bool indirect, u16 offset) {
 				cpu->holder.ptr = &cpu->memory->bank_array[cpu->DBR][cpu->DP + *++cpu->PC + offset];
 				cpu->holder.value = *cpu->holder.ptr;
 			} else {
-				hLoAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset];
-				hHiAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset + 1];
-				hAddr = hHiAddr << 8 | hLoAddr;
+				hAddr = cpu->DP + *++cpu->PC + offset;
 				cpu->resolver->get(cpu->DBR, hAddr);
-
+				hLoAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+				hHiAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr + 1];
+				hAddr = hHiAddr << 8 | hLoAddr;
 				cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
 				cpu->holder.value = *cpu->holder.ptr;
 			}
@@ -99,11 +107,14 @@ static void busReadCPU(snCPU* cpu, char mode, bool indirect, u16 offset) {
 			if (!indirect) {
 				printf("bus_error: this mode doesnt exist ADDRESS_DP_24\n");
 			} else {
-				hLoAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset];
-				hHiAddr = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset + 1];
-				hBank = cpu->memory->bank_array[cpu->DBR][cpu->DP + (*++cpu->PC) + offset + 1];
-				hAddr = hHiAddr << 8 | hLoAddr;
-				cpu->resolver->get(hBank, hAddr);
+				hAddr = (*(++cpu->PC)) + cpu->DP + offset;
+				cpu->resolver->get(cpu->DBR, hAddr);
+
+				hLoAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
+				hHiAddr = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr + 1];
+				cpu->resolver->realBank = cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr + 2];
+				cpu->resolver->realAddr = (hHiAddr << 8 | hLoAddr);
+				cpu->resolver->get(cpu->resolver->realBank, cpu->resolver->realAddr);
 
 				cpu->holder.ptr = &cpu->memory->bank_array[cpu->resolver->realBank][cpu->resolver->realAddr];
 				cpu->holder.value = *cpu->holder.ptr;
@@ -113,13 +124,24 @@ static void busReadCPU(snCPU* cpu, char mode, bool indirect, u16 offset) {
 	return;
 }
 
-static void busWrite(snCPU* cpu, u8 mode, bool indirect, u16 offset);
+static void busWrite_CPU(snCPU* cpu, char mode, u16 value, u16 offset) {
+	if (mode == BUS_WRITE_16) {
+		hLoByte = (u8) (value >> 8);
+		hHiByte = (u8) value;
+		*(cpu->holder.ptr + offset) = hHiByte;
+		*(cpu->holder.ptr + offset + 1) = hLoByte;
+		printf("writing %04X %02X %02X to [%X][%X] %p %p\n", value, hHiByte, hLoByte, cpu->resolver->realBank, cpu->resolver->realAddr + offset ,cpu->holder.ptr + offset, (cpu->holder.ptr + offset + 1));
+	} else {
+		*(cpu->holder.ptr + offset) = (u8) value;	
+		printf("warning: casting to uint8_t\nwriting %02X to %p\n", value, cpu->holder.ptr + offset);
+	}
+};
 
 static void writeSNES_CPU(snCPU* cpu, u16 value) {
 	printf("bus_write: writing %X to [%X][%X] %p \n", \
 	       value, cpu->resolver->realBank, cpu->resolver->realAddr, cpu->holder.ptr);
 
-	*cpu->holder.ptr = value;
+	*cpu->holder.ptr = value;	
 };
 
 static void writeSNESindirect_SPC(snSPC* spc, u16 offset, u16 value, u8 mode) {
@@ -233,4 +255,5 @@ extern void setupCPUBUS(snCPU* cpu, cpuBUS* bus) {
 	bus->holder = &cpu->holder;
 	bus->read = busReadCPU;
 	bus->write = writeSNES_CPU;
+	bus->write_test = busWrite_CPU;
 }

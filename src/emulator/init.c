@@ -114,16 +114,16 @@ static void mapPtrBank(emGeneral* emulator, unsigned int count, u8* bank_array[]
 	setupDMA(emulator, &bank_array[index.dma]);
 
 	general.ram = eRAM;
-	index.vramL = count + 3;
-	index.vramH = count + 4;
-	bank_array[index.vramL] = general.ram->wRAM_lo;
-	bank_array[index.vramH] = general.ram->wRAM_hi;
+	index.wramL = count + 3;
+	index.wramH = count + 4;
+	bank_array[index.wramL] = general.ram->wRAM_lo;
+	bank_array[index.wramH] = general.ram->wRAM_hi;
 
 
 	/* doing this for my own crazy sanity
 	 * TODO: DUDE IT'S BEEN 1 WEEK WTF IS WRONG */
-	printf("%p %p \n", bank_array[index.vramL], general.ram->wRAM_lo);
-	printf("%p %p \n", bank_array[index.vramH], general.ram->wRAM_hi);
+	printf("%p %p \n", bank_array[index.wramL], general.ram->wRAM_lo);
+	printf("%p %p \n", bank_array[index.wramH], general.ram->wRAM_hi);
 	/* NOT TODO: YEA I SOLVED IT, I'M CRAZY HAHAHAHA */
 }
 

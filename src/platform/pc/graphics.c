@@ -3,8 +3,7 @@
 #include <unistd.h>
 
 #define RAYGUI_IMPLEMENTATION
-#include "raylib/raylib.h"
-#include "raylib/raygui.h"
+#include "raylib.h"
 
 #include "emulator/main.h"
 #include "core/bus.h"

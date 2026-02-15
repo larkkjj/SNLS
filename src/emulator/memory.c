@@ -33,44 +33,36 @@ extern void attachROM(u8* buffer) {
 };
 
 static inline void resolveAddr(u8 index, u16 address) {
-	u16 tAddr;
-	u8 tBank;
-
 	printf("got address [%X]:[%X]\n", index, address);
 	if (index >= 0x00 && index <= 0x3F) {
-		if (address <= 0x200) {
-			tAddr = address - 0x8000;
-			tBank = bankCount + 3;	
+		if (address <= 0x2000) {
+			 index = resolver.indexer->wramL;
 		} else if (address >= 0x8000) {
 			/* goes to rom*/
-			tAddr = address - 0x8000;
-			tBank = index;
-		} else if (address >= 0x2100 && address <= 0x213F){
+			address -= 0x8000;
+		} else if (address >= 0x2100 && address <= 0x213F) {
 			/* falls back to ppu! */
-			tAddr = address - 0x2100;
-			tBank = resolver.indexer->ppu;
+			address -= 0x2100;
+			index = resolver.indexer->ppu;
 		} else if (address >= 0x2140 && address <= 0x2143) {
 			/* falls back to apu! */
-			tAddr = address - 0x2140;
-			tBank = resolver.indexer->apu;
+			address -= 0x2140;
+			index = resolver.indexer->apu;
 		} else if (address == 0x4200 || address == 0x4201) {
-			tAddr = address - 0x4200;
-			tBank = bankCount + 3;
+			address -= 0x4200;
+			index = bankCount + 3;
 			printf("we're supposed to got joypad registers, but not implemented yet\n");
 		} else if (address == 0x420B || address == 0x420C) {
-			tAddr = address - 0x420B;
-			tBank = resolver.indexer->dma;
+			address -= 0x420B;
+			index = resolver.indexer->dma;
 		}
 	} else if (index == 0x7E) {
-	 	tAddr = address;
-		tBank = resolver.indexer->vramL;
+		index = resolver.indexer->wramL;
 	} else if (index == 0x7F) {
-		tAddr = address;
-		tBank = resolver.indexer->vramH;
+		index = resolver.indexer->wramH;
 	}
-	resolver.realAddr = tAddr;
-	resolver.realBank = tBank;
-	printf("resolve: bank: %X address: %X \n", resolver.realBank, resolver.realAddr);
+	resolver.realAddr = address;
+	resolver.realBank = index;
 	return;
 };
 

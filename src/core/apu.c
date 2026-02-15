@@ -250,7 +250,6 @@ static void snSPC_MOV_DP_const(snSPC* spc) {
 	spc->bus->readU8const(spc, 0x00);
 	spc->bus->writeIndirect(spc, 0x00, hAddr, 0x05);
 	spc->PC++;
-	sleep(1);
 };
 
 static void snSPC_POP_Y(snSPC* spc) {

@@ -13,8 +13,8 @@ typedef struct {
 	char	ppu;
 	char	apu;
 	char	dma;
-	char	vramH;
-	char	vramL;
+	char	wramH;
+	char	wramL;
 } indexer;
 
 typedef struct {

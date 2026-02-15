@@ -24,7 +24,7 @@ ifeq ($(ps2), 1)
 else
 	libraries	+= $(shell pkg-config --cflags --libs raylib freetype2 libpng)
 
-	includes    	+= $(shell pkg-config --cflags freetype2 libpng)
+	includes    	+= $(shell pkg-config --cflags raylib freetype2 libpng)
 
 	source		+= src/platform/pc
 	prefix		:=
