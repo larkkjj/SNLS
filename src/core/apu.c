@@ -12,6 +12,20 @@
 
 static spcBUS* spcBUS_ptr;
 
+// static void updatePSWnew(snSPC* spc, u8 flags, u16 value) {
+// 	if (flags & SPC_C_FLAG) {
+// 		spc->PSW.Carry = 1;
+// 	}
+// 	if (flags & SPC_Z_FLAG) {
+// 		spc->PSW.Zero = ((value == 0) ? 1 : 0);
+// 	}
+// 	if (flags & SPC_N_FLAG) {
+// 		spc->PSW.Negative = (((s16) value < 0 ? 1 : 0));
+// 	}
+// 	if (flags & SPC_I_FLAG) {
+// 		spc->PSW.Interrupt = 1;
+// 	}
+// }
 static void updatePSW(u8* PSW, u16 value, u8 flags) {
 	printf("PSW: %X \n", *PSW);
 	/*for(unsigned int i = 0x00; i < 0x80; i ++) {
@@ -69,6 +83,10 @@ static void generic(snSPC* spc) {
 
 	printf("spc_opcode: %X generic opcode / not implemented\n", *spc->PC);
 	return;
+};
+
+static void returnIPL(snSPC* spc) {
+	spc->PC = &spc->internalRAM[0xFFC0];
 };
 
 static void snSPC_BRA(snSPC* spc) {
@@ -334,6 +352,8 @@ extern void setupSPC(emGeneral* emulator, snSPC* spc_ptr, u8** buffer) {
 	spc_ptr->opcode[0xEE] = snSPC_POP_Y;
 	spc_ptr->opcode[0x40] = snSPC_SETP;
 	spc_ptr->opcode[0x80] = snSPC_SETC;
+
+	spc_ptr->opcode[0x78] = returnIPL;
 
 	printf("spc_setup: done\n");
 	usleep(1000);

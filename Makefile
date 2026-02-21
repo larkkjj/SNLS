@@ -2,7 +2,7 @@ binary		:= SNLS.ELF
 ps2			?= 0
 window		?= 1
 debug			?= 0
-flags			:= -g --std=c23 -DDEBUG=0 -D_GNU_SOURCE -Wstringop-overflow=0
+flags			:= -O0 -g -DDEBUG=0 -D_GNU_SOURCE -Wstringop-overflow=0
 libraries	:= -lm -lc
 includes		:= -Iinclude -I. -Iinclude/general
 

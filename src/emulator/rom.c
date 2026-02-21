@@ -59,7 +59,7 @@ int splitROM(rom* rom_Ptr) {
 		break;
 		default:
 			printf("Unknown ROM type %X", rom_Ptr->type);
-			exit(0);
+			exit(1);
 	}
 	fseek(rom_File, rom_Ptr->header - 0x3C, SEEK_SET);
 	fread(rom_Ptr->headername, 21, sizeof(char), rom_File);
@@ -68,6 +68,10 @@ int splitROM(rom* rom_Ptr) {
 	fseek(rom_File, rom_Ptr->header, SEEK_SET);
 	fread(&rom_Ptr->resetV, sizeof(u16), 1, rom_File);
 	fseek(rom_File, rom_Ptr->offset, SEEK_SET);
+	printf("%X\n", rom_Ptr->resetV);
+	if (rom_Ptr->resetV >= 0x8000) {
+		rom_Ptr->resetV -= 0x8000;
+	}
 //	fseek(rom_File, 0, SEEK_SET);
 	/* remanescent code */
 	//rom_Ptr->MapArea = 0x8000;
@@ -124,6 +128,7 @@ void openRom(char* rom_name, rom* rom_Ptr) {
 			splitROM(rom_Ptr);
 		}
 		printf("%s \n", rom_Ptr->headername);
+		printf("%X \n", rom_Ptr->resetV);
 	};
 	return;
 };

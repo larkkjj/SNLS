@@ -7,6 +7,19 @@
 #include "emulator/memory.h"
 #include "core/stack.h"
 
+#define CPU_N_FLAG 0x80
+#define CPU_V_FLAG 0x40
+#define CPU_M_FLAG 0x20
+#define CPU_X_FLAG 0x10
+#define CPU_D_FLAG 0x08
+#define CPU_I_FLAG 0x04
+#define CPU_Z_FLAG 0x02
+#define CPU_C_FLAG 0x01
+#define CPU_E_FLAG 0x100
+
+/* TODO: Change Program Counter to
+a real counter  */
+
 /*ですただ */
 typedef struct snCPU {
 	u8*				PC;
@@ -21,20 +34,20 @@ typedef struct snCPU {
 	u8		   	PB;
 	u16				P;
 
+	/* WARNING: THIS IS ENDIAN SPECIFIC */
 	union {
 		struct {
-			bool	Negative: 1;
-			bool	Overflow: 1;
-			bool	Accumulator: 1;
-			bool	Index: 1;
-			bool	Decimal: 1;
-			bool	Interrupt: 1;
-			bool	Zero: 1;
-			bool	Carry: 1;
-			bool	Emulation: 1;
-			bool	Break: 1;
+			uint8_t	Carry: 1;
+			uint8_t	Zero: 1;
+			uint8_t	Interrupt: 1;
+			uint8_t	Decimal: 1;
+			uint8_t	Index: 1;
+			uint8_t	Accumulator: 1;
+			uint8_t	Overflow: 1;
+			uint8_t	Negative: 1;
+			uint8_t Emulation: 1;
 		};
-		bool	value;
+		uint16_t	value;
 	} flags;
 
   cpuStack 			stack;
@@ -43,6 +56,7 @@ typedef struct snCPU {
 	emMemory*			memory;
 	memoryHolder	holder;
 	void					(*fetch)(snCPU* cpu);
+	void					(*flagsUpdate)(snCPU* cpu, u8 flag, u16 value);
 } snCPU;
 
 typedef enum {
@@ -192,11 +206,11 @@ typedef enum {
 
 	_lda_addr	= 0xAD,
 	_lda_const	= 0xA9,
-	_lda_addr_x	= 0xB9,
-	_lda_addr_y	= 0xBD,
-	_lda_dp_indr_l	= 0xA5,
+	_lda_addr_y	= 0xB9,
+	_lda_addr_x	= 0xBD,
+	_lda_dp_indr_l	= 0xA7,
 	_lda_dp_indr_l_y= 0xB7,
-	_lda_dp		= 0xA7,
+	_lda_dp		= 0xA5,
 	_lda_l		= 0xAF,
 	_lda_l_x	= 0xBF,
 	_ldx_const	= 0xA2,

@@ -61,7 +61,6 @@ static u8 IPL_NTSC[0x40] = {
 	//0xC5, 0xF5, /* store */
 };
 
-
 typedef struct snSPC {
 	u8*		PC;
 	u16		DP; /* This is not a register, this is just for
@@ -70,10 +69,23 @@ typedef struct snSPC {
 	u8		A;
 	u8		X;
 	u8		Y;
-	u16*		YA; /* A << 8 | Y*/
+	u16*	YA; /* A << 8 | Y*/
 	u16		SP; /* Stack Pointer */
-	u8		PSW; /* Same as CPU flags or PSW if you prefer */
 
+	// union {
+	// 	struct PSW {
+	// 		uint8_t	Negative: 1;
+	// 		uint8_t	Overflow: 1;
+	// 		uint8_t	DirectPage: 1;
+	// 		uint8_t	HalfCarry: 1;
+	// 		uint8_t	Interrupt: 1;
+	// 		uint8_t	Zero: 1;
+	// 		uint8_t	Carry: 1;
+	// 	} PSW;
+	// 	uint8_t value;
+	// };
+
+	u8		PSW;
 	u8		internalRAM[0xFFFF];
 	spcStack   stack;
 	spcBUS*		bus; /* yes, an independent bus
@@ -100,6 +112,11 @@ typedef struct snSPC {
 
 typedef struct snDSP {
 	/* this is really responsible for SNES AUDIO */
+	s8		MVOLL;
+	s8		MVOLR;
+	s8		EVOLL;
+	s8		EVOLR;
+
 	u32		channel1;
 	u32		channel2;
 	u32		channel3;

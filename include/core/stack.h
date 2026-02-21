@@ -6,9 +6,9 @@
 #include "general/references.h"
 
 #define SPC_STACK_PUSH8    0x1
-#define SPC_STACK_PUSH16   0x3
+#define SPC_STACK_PUSH16   0x2
 
-#define SPC_STACK_PULL8    0x2
+#define SPC_STACK_PULL8    0x3
 #define SPC_STACK_PULL16   0x4
 
 #define CPU_STACK_PUSH8    0x5
@@ -24,7 +24,7 @@ typedef struct cpuStack {
    u8          bank;
    u16         address;
 
-   void        (*push)(snCPU* cpu, u8 mode, u16 address);
+   void        (*push)(snCPU* cpu, u8 mode, u32 address);
    void        (*pull)(snCPU* cpu, u8 mode);
 } cpuStack;
 

@@ -51,4 +51,6 @@ extern u16 hAddr;
 extern u16 hLoAddr;
 extern u16 hHiAddr;
 
+extern void printMemory(u8* pointer, u16 count);
+
 #endif

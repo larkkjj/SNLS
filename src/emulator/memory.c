@@ -27,6 +27,12 @@ static addrResolver resolver;
  * stop using #include all the time for 2 functions
  * only */
 
+extern void printMemory(u8* pointer, u16 count) {
+	for (unsigned int j = 0; j < count; j ++) {
+		printf("PC - %d: %02X | PC: %02X | PC + %d: %02X\n", j, *(pointer - j), *(pointer), j, *(pointer + j));
+	}
+}
+
 extern void attachROM(u8* buffer) {
 	fread(buffer, sizeof(u8), 0x8000, rom_File);
 	return;
@@ -67,9 +73,11 @@ static inline void resolveAddr(u8 index, u16 address) {
 };
 
 extern void setupResolver(indexer* index, snCPU* cpu) {
+	printf("resolver_setup: init\n");
 	resolver.get = resolveAddr;
 	resolver.indexer = index;
 	cpu->resolver = &resolver;
+	printf("resolver_setup: done\n");
 }
 
 extern void assignToMap(u8** dest, u8** src, unsigned int offset, unsigned int count, unsigned int type) {

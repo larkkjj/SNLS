@@ -31,9 +31,13 @@ static emMemory memory;
 u8 bankCount = 0;
 
 typedef struct snesSync {
-	u8	counter;
-	u8	order[];
+	u8	index;
+	u8	row[];
 } snesSync;
+
+/* name changed from sync to syncOrder due do
+sync function conflit which caused a segfault */
+snesSync syncOrder;
 
 u8 cpuOperation = 0x01;
 u8 ppuOperation = 0x02;
@@ -41,14 +45,13 @@ u8 spcOperation = 0x04;
 u8 dmaOperation = 0x08;
 
 void mainFetch(emGeneral* emulator) {
-	snesSync sync;
 	emulator->allowedFetch = 0;
 	for(unsigned int i = 0x00; i <= 0xFF; i++) {
-		sync.order[i] = cpuOperation;
+		syncOrder.row[i] = cpuOperation;
 		if (i % 3 == 0) {
-			sync.order[i] |= spcOperation;
+			syncOrder.row[i] |= spcOperation;
 		} else if (i % 5 == 0) {
-			sync.order[i] |= ppuOperation;
+			syncOrder.row[i] |= ppuOperation;
 		}
 	}
 	/* our main infinite loop' which is basically
@@ -57,28 +60,28 @@ void mainFetch(emGeneral* emulator) {
 		#ifdef SNLS_WITH_WINDOW
 		pollWindow(emulator);
 		#endif
-		if (sync.order[sync.counter] & 0x01) {
+		if (syncOrder.row[syncOrder.index] & 0x01) {
 			printf("sync_counter: fetching cpu...\n");
 			emulator->cpu->fetch(emulator->cpu);
 		}
-		if (sync.order[sync.counter] & 0x02) {
+		if (syncOrder.row[syncOrder.index] & 0x02) {
 			printf("sync_counter: fetching ppu...\n");
 			emulator->ppu->fetch(emulator->ppu);
 		}
-		if (sync.order[sync.counter] & 0x04) {
+		if (syncOrder.row[syncOrder.index] & 0x04) {
 			printf("sync_counter: fetching spc...\n");
 			emulator->apu->spc->fetch(emulator->apu->spc);
 		}
-		if (sync.order[sync.counter] & 0x08) {
+		if (syncOrder.row[syncOrder.index] & 0x08) {
 			printf("sync_counter: fetching DMA ...(at least we're supposed to\n");	
 		}
-		printf("%X %X \n", sync.counter, sync.order[sync.counter]);
+		printf("%X %X \n", syncOrder.index, syncOrder.row[syncOrder.index]);
 
-		if (sync.counter == 0xFF) {
+		if (syncOrder.index == 0xFF) {
 			printf("sync_counter: we made 256 fetches (CPU + SPC + PPU)\n");
 			usleep(10000);
 		}
-		sync.counter++;
+		syncOrder.index++;
 	}
 }
 
@@ -91,10 +94,7 @@ static void mapPtrBank(emGeneral* emulator, unsigned int count, u8* bank_array[]
 	/* this is where our fun beggins */
 	for(unsigned int i = 0; i < count; i ++) {
 		bank_array[i] = malloc(0x8000);
-		rom[i].buffer = malloc(0x8000);
-		fread(rom[i].buffer, sizeof(u8), 0x8000, rom_File);
-		bank_array[i] = rom[i].buffer;
-		free(rom[i].buffer);
+		fread(bank_array[i], sizeof(u8), 0x8000, rom_File);
 	}
 
 	bankCount = count;
@@ -163,6 +163,10 @@ extern void initEmu(rom* rom_Ptr) {
 	free(eCPU);
 	free(ePPU);
 	free(eDMA);
+
+	for(unsigned int i = 0; i < bankCount; i ++) {
+		free(general.memory->bank_array[i]);
+	}
 
 	return;
 };
