@@ -79,7 +79,6 @@ void mainFetch(emGeneral* emulator) {
 
 		if (syncOrder.index == 0xFF) {
 			printf("sync_counter: we made 256 fetches (CPU + SPC + PPU)\n");
-			usleep(10000);
 		}
 		syncOrder.index++;
 	}
@@ -90,7 +89,7 @@ static void mapPtrBank(emGeneral* emulator, unsigned int count, u8* bank_array[]
 	/* target, make 17 pointers, assuming the rom
 	 * have 16 banks, so that would be
 	 * 32KB * 16 + 32KB => 544KB*/
-	emROM rom[count];
+
 	/* this is where our fun beggins */
 	for(unsigned int i = 0; i < count; i ++) {
 		bank_array[i] = malloc(0x8000);

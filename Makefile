@@ -3,8 +3,8 @@ ps2			?= 0
 window		?= 1
 debug			?= 0
 flags			:= -O0 -g -DDEBUG=0 -D_GNU_SOURCE -Wstringop-overflow=0
-libraries	:= -lm -lc
-includes		:= -Iinclude -I. -Iinclude/general
+libraries	:=  -lm -lc
+includes		:= -Iraylib -Iinclude -I. -Iinclude/general
 
 ifeq ($(ps2), 1)
 	source		+= src/platform/ps2
@@ -22,7 +22,7 @@ ifeq ($(ps2), 1)
 
 	linkfile	:= -T$(PS2SDK)/ee/startup/linkfile
 else
-	libraries	+= $(shell pkg-config --cflags --libs raylib freetype2 libpng)
+	libraries	+= -Lraylib -lraylib $(shell pkg-config --cflags --libs freetype2 libpng)
 
 	includes    	+= $(shell pkg-config --cflags raylib freetype2 libpng)
 
@@ -63,7 +63,7 @@ d_files		+= $(patsubst %.c,bin/%.d,$(c_source))
 all: check $(binary)
  
 check:
-	@if pkg-config freetype2 raylib libpng; then \
+	@if pkg-config freetype2 libpng; then \
 		continue; \
 	else \
 		echo "Error, some package wasn't found"; \

@@ -9,6 +9,7 @@
 #include "ps2_filesystem_driver.h"
 #endif
 
+char*	romName;
 char path_buf[255];
 
 int main(int argc, char* argv[]) {
@@ -20,6 +21,10 @@ int main(int argc, char* argv[]) {
 			printf("WARNING: --ipl is not implemented yet.\nparameter [%s] will be ignored\n", argv[++i]);
 			sleep(1);
 		}
+
+			if (strcmp(argv[i], "--rom") == 0) {
+				romName = argv[++i];
+			}
 	}
 	rom rom_Ptr;
 	//initWindow();
@@ -30,8 +35,7 @@ int main(int argc, char* argv[]) {
 	 * but this is used until
 	 * i make a file explorer */
 	//openRom("roms/cputest/cputest-full.sfc", &rom_Ptr);
-	openRom("roms/mariow.sfc", &rom_Ptr);
-
+	openRom(romName, &rom_Ptr);
 	initEmu(&rom_Ptr);
 
 	/* Yea i know this is bad

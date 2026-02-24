@@ -52,11 +52,10 @@ static void pushCPU(snCPU* cpu, u8 mode, u32 address) {
       case CPU_STACK_PUSH24:
          hLoAddr = (u8) (address);
          hHiAddr = (u8) (address >> 8);
-         hBank = (u8) (address >> 16);
          printf("%02X %02X\n", hLoAddr, hHiAddr);
          cpu->memory->bank_array[cpu->DBR][cpu->SP] = hHiAddr;
          cpu->memory->bank_array[cpu->DBR][--cpu->SP] = hLoAddr;
-         cpu->memory->bank_array[cpu->DBR][--cpu->SP] = hBank;
+         cpu->memory->bank_array[cpu->DBR][--cpu->SP] = cpu->PB;
          --cpu->SP;
       break;
       default:
@@ -77,6 +76,9 @@ static void pullCPU(snCPU* cpu, u8 mode) {
          cpu->holder.value = (hHiAddr << 8 | hLoAddr);
       break;
       case CPU_STACK_PULL24:
+         hLoAddr = cpu->memory->bank_array[cpu->DBR][++cpu->SP];
+         hHiAddr = cpu->memory->bank_array[cpu->DBR][++cpu->SP];
+         cpu->PB = cpu->memory->bank_array[cpu->DBR][++cpu->SP];
          cpu->holder.value = (hHiAddr << 8 | hLoAddr);
       break;
       default:

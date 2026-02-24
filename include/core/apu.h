@@ -117,15 +117,40 @@ typedef struct snDSP {
 	s8		EVOLL;
 	s8		EVOLR;
 
-	u32		channel1;
-	u32		channel2;
-	u32		channel3;
-	u32		channel4;
-	u32		channel5;
-	u32		channel6;
-	u32		channel7;
-	u32		channel8;
-	
+	u8		kOn;
+	u8		kOff;
+	u8		flg;
+	u8		endX;
+	s8		efb;
+
+	u8		pmon;
+	u8		non;
+	u8		eon;
+	u8		dir;
+	u8		esa;
+	u8		edl;
+
+	s8		fir0;
+	s8		fir1;
+	s8		fir2;
+	s8		fir3;
+	s8		fir4;
+	s8		fir5;
+	s8		fir6;
+	s8		fir7;
+
+	struct {
+		u8	vVolL;
+		u8	vVolR;
+		u8	vPitchL;
+		u8	vPitchH;
+		u8	vSrcn;
+		u8	vAdsr1;
+		u8	vAdsr2;
+		u8	vGain;
+		u8	vEnvx;
+		u8	vOutx;
+	} voice;
 } snDSP;
 
 typedef struct snAPU {
@@ -136,9 +161,8 @@ typedef struct snAPU {
 	u8		IO2;
 	u8		IO3;
 
-	snSPC*		spc;
-	snDSP*		dsp;
-
+	snSPC*	spc;
+	snDSP		dsp;
 } snAPU;
 
 #endif

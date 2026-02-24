@@ -926,9 +926,9 @@ static void fetchCPU(snCPU* cpu) {
 		case _jsr_addr:
 			sn_OpJSR_addr(cpu);
 		break;
-		// case _jsr_l:
-		// 	sn_OpJSR_long(cpu);
-		// break;
+		case _jsr_l:
+			sn_OpJSR_long(cpu);
+		break;
 		case _lda_addr:
 			sn_OpLDA_addr(cpu);
 		break;

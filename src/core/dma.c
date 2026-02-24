@@ -8,7 +8,6 @@
 #include "general/references.h"
 
 static void fetchDMA(emGeneral* emulator) {
-	*emulator->active |= 0x08;
 	printf("dma_fetch: mdmaen: %X hdmaen: %X \n", emulator->dma->MdMaen, emulator->dma->HdMaen);
 	/* setup 7 channels*/
 	if (emulator->dma->MdMaen & 0x01) {

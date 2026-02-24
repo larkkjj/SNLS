@@ -69,9 +69,6 @@ int splitROM(rom* rom_Ptr) {
 	fread(&rom_Ptr->resetV, sizeof(u16), 1, rom_File);
 	fseek(rom_File, rom_Ptr->offset, SEEK_SET);
 	printf("%X\n", rom_Ptr->resetV);
-	if (rom_Ptr->resetV >= 0x8000) {
-		rom_Ptr->resetV -= 0x8000;
-	}
 //	fseek(rom_File, 0, SEEK_SET);
 	/* remanescent code */
 	//rom_Ptr->MapArea = 0x8000;
